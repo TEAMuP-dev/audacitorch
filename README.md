@@ -55,7 +55,11 @@ required fields:
     -  If `multichannel` is set to `true`, stereo tracks are passed to the model as multichannel audio tensors, with shape `(2, n)`. Note that this means that the input could either be a mono track with shape `(1, n)` or stereo track with shape `(2, n)`.
     -  If `multichannel` is set to `false`, stereo tracks are downmixed, meaning that the input audio tensor will always be shape `(1, n)`.
 
-### Example - Waveform-to-Waveform
+### Example - Exporting a Pretrained [Asteroid](https://github.com/asteroid-team/asteroid)
+
+See this [example notebook](/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
+
+### Example - Waveform-to-Waveform model
 
 Here's a minimal example for a model that simply boosts volume by multiplying the incoming audio by a factor of 2. 
 
