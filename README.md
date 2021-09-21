@@ -65,7 +65,7 @@ Here's a minimal example for a model that simply boosts volume by multiplying th
 
 #### Define a model class
 
-First, we create our model. There are no internal constraints on what the, as long as you can use `torch.jit.script` or `torch.jit.trace`, and it is able to meet the input-output constraints specified in waveform-to-waveform and waveform-to-labels models. 
+First, we create our model. There are no internal constraints on what the internal model architecture should be, as long as you can use `torch.jit.script` or `torch.jit.trace` to serialize it, and it is able to meet the input-output constraints specified in waveform-to-waveform and waveform-to-labels models. 
 
 ```python
 import torch.nn as nn
