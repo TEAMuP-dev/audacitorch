@@ -1,2 +1,2 @@
 from .core import *
-fom . import utils
+from . import utils

@@ -1,5 +1,6 @@
 from typing import Tuple
 import torch
+from torch import nn
 
 class AudacityModel(nn.Module):
 
@@ -27,6 +28,10 @@ class WaveformToWaveform(AudacityModel):
   def forward(self, x: torch.Tensor) -> torch.Tensor:
     assert x.ndim == 2, "input must have two dimensions (channels, samples)"
     x = self.do_forward_pass(x)
+
+    # sum them back up into mono sources
+    x = x.sum(1, keepdim=False)
+    print(x.shape)
     assert x.ndim == 2, "output must have two dimensions (channels, samples)"
     return x
 
@@ -59,9 +64,9 @@ class WaveformToLabels(AudacityModel):
     labels = output[0]
     timestamps = output[1]
 
-    assert labels.shape[0] == timestamps.shape[0], "time dimension between "
+    assert labels.shape[0] == timestamps.shape[0], "time dimension between "\
                                     "labels and timestamps tensors must be equal"
-    assert timestamps.shape[1] == 2, "second dimension of the timestamps tensor" 
+    assert timestamps.shape[1] == 2, "second dimension of the timestamps tensor"\
                                       "must be size 2"
 
   def do_forward_pass(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:

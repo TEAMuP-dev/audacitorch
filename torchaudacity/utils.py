@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+import json
 
 def save_model(model: torch.jit.ScriptModule, metadata: dict, root_dir: Path):
     root_dir.mkdir(exist_ok=True, parents=True)
