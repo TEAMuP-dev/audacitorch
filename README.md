@@ -12,6 +12,7 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
     - [Waveform to Labels models](#wav2labels)
 - [Model Metadata](#metadata)
 - [Example - Waveform-to-Waveform](#example-wav2wav)
+    - [Making sure your model is compatible with `torchscript`](#compat)
 - [Example - Exporting a Pretrained Asteroid Model](#example-asteroid)
 
 --- 
@@ -119,8 +120,17 @@ class MyVolumeModel(nn.Module):
         return x
 ```
 
-##### some gotchas when using torch.jit
-TODO: add a link and some helpful text here. 
+<a name="compat"/>
+
+#### Making sure your model is compatible with `torchscript`
+PyTorch makes it really easy to deploy your Python models in C++ by using `torchscript`, an intermediate representation format for torch models that can be called in C++. Many of Python's built-in functions are supported by torchscript. However, not all Python operations are supported by the torchscript environment, meaning that you are only allowed to use a subset of Python operations in your model code. See [the torch.jit docs](https://pytorch.org/docs/master/jit.html#python-functions-and-modules) to learn more about writing torchscript-compatible code. 
+
+If your model computes spectrograms (or requires any kind of preprocessing/postprocessing), make sure those operations are compatible with torchscript, like [torchaudio](https://pytorch.org/tutorials/beginner/audio_preprocessing_tutorial.html#feature-extractions)'s operation set. 
+
+Useful links:
+- [Torchscript reference](https://pytorch.org/docs/master/jit.html)
+- [Pytorch's tutorial on torchscript models](https://pytorch.org/tutorials/advanced/cpp_export.html#step-1-converting-your-pytorch-model-to-torch-script)
+- [A 1:1 mapping of the features in python to their support in torchscript](https://pytorch.org/docs/master/jit_python_reference.html#python-language-reference)
 
 <a name="wrapping"/>
 
