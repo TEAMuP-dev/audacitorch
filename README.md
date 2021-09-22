@@ -5,12 +5,12 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 ## Table of Contents
 
 - [Contributing Models to Audacity](#contrib)
+- [Choosing an Effect Type ](#effect-types)
     - [Waveform to Waveform models](#wav2wav)
-    - [Waveform to Labels models](#wav2label)
-    - [Model Metadata](#metadata)
-    - [Model Metadata Spec](#metadata-spec)
-- [Example - Exporting a Pretrained Asteroid Model](#example-asteroid)
+    - [Waveform to Labels models](#wav2labels)
+- [Model Metadata](#metadata)
 - [Example - Waveform-to-Waveform](#example-wav2wav)
+- [Example - Exporting a Pretrained Asteroid Model](#example-asteroid)
 
 --- 
 
@@ -22,14 +22,11 @@ Audacity is equipped with a wrapper framework for deep learning models written i
 `Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
 `torchaudacity` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveform`, and `WaveformToLabels`, respectively. 
 
-Contributing a model to Audacity consists of 4 steps:
-
-1. Developing your model
-2. Choosing a target tool (e.g. `Deep Learning Effect` or `Deep Learning Analyzer`)
-3. Wrapping your model using `torchaudio`
-4. 
-
 ![](/torchaudacity/assets/tensor-flow.png)
+
+<a name="effect-types"/> 
+
+## Choosing an Effect Type 
 
 <a name="wav2wav"/> 
 
@@ -39,20 +36,19 @@ Waveform-to-waveform models receive a single multichannel audio track as input, 
 
 Example models for waveform-to-waveform effects include source separation, neural upsampling, guitar amplifier emulation, generative models, etc. Output tensors for waveform-to-waveform models must be multichannel waveform tensors with shape `(num_output_channels, num_samples)`. For every audio waveform in the output tensor, a new audio track is created in the Audacity project. 
 
-<a name="wav2label"/>
+<a name="wav2labels"/> 
 
 ### Waveform to Labels models
 
 Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class probabilities for each label present in the waveform, shape `(num_timesteps, num_classes)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
 
+
 <a name="metadata"/>
 
-### Model Metadata
+## Model Metadata
 
 Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. 
 For waveform-to-label models, the model contributor may include an optional confidence threshold, where predictions with a probability lower than the confidence threshold are labeled as ``uncertain''. 
-
-<a name="metadata-spec"/>
 
 #### Metadata Spec
 
@@ -87,21 +83,23 @@ required fields:
 
 ---
 
-<a name="example-asteroid"/>
-
-### Example - Exporting a Pretrained [Asteroid](https://github.com/asteroid-team/asteroid) model
-
-See this [example notebook](/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
-
----
-
 <a name="example-wav2wav"/>
 
-### Example - Waveform-to-Waveform model
+## Example - Waveform-to-Waveform model
 
 Here's a minimal example for a model that simply boosts volume by multiplying the incoming audio by a factor of 2. 
 
-#### Define a model class
+We can sum up the whole process into 5 steps:
+
+1. [Developing your model](#developing)
+2. [Choosing an Effect Type (e.g. `Deep Learning Effect` or `Deep Learning Analyzer`)](#choosing)
+3. [Wrapping your model using `torchaudio`](#wrapping)
+4. [Creating a metadata document](#creating-metadata) 
+5. [Exporting to HuggingFace](#exporting)
+
+<a name="developing"/>
+
+### Developing your model
 
 First, we create our model. There are no internal constraints on what the internal model architecture should be, as long as you can use `torch.jit.script` or `torch.jit.trace` to serialize it, and it is able to meet the input-output constraints specified in waveform-to-waveform and waveform-to-labels models. 
 
@@ -120,7 +118,12 @@ class MyVolumeModel(nn.Module):
         return x
 ```
 
-#### Create a wrapper class
+##### some gotchas when using torch.jit
+TODO: add a link and some helpful text here. 
+
+<a name="wrapping"/>
+
+### Wrapping your model using `torchaudio`
 
 Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveform` as our parent class. For both `WaveformToWaveform` and `WaveformToLabels`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/torchaudacity/core.py) for more details. 
 
@@ -146,7 +149,9 @@ class MyVolumeModelWrapper(WaveformToWaveform):
         return output
 ```
 
-#### Create a metadata file
+<a name="creating-metadata"/>
+
+### Creating a metadata document
 
 Audacity models need a metadata file. See the metadata [spec](#metadata-spec) to learn about the required fields. 
 
@@ -188,7 +193,9 @@ serialized_model = torch.jit.script(serialized_model)
 save_model(serialized_model, metadata, root)
 ```
 
-#### Export to HuggingFace
+<a name="exporting"/>
+
+### Exporting to HuggingFace
 
 You should now have a directory structure that looks like this: 
 
@@ -211,3 +218,11 @@ tags: audacity
 ```
 
 Awesome! It's time to push to HuggingFace. See their [documentation](https://huggingface.co/docs/hub/adding-a-model) for adding a model to the HuggingFace model hub. 
+
+<a name="example-asteroid"/>
+
+## Example - Exporting a Pretrained [Asteroid](https://github.com/asteroid-team/asteroid) model
+
+See this [example notebook](/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
+
+---
