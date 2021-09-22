@@ -89,13 +89,12 @@ required fields:
 
 Here's a minimal example for a model that simply boosts volume by multiplying the incoming audio by a factor of 2. 
 
-We can sum up the whole process into 5 steps:
+We can sum up the whole process into 4 steps:
 
 1. [Developing your model](#developing)
-2. [Choosing an Effect Type (e.g. `Deep Learning Effect` or `Deep Learning Analyzer`)](#choosing)
-3. [Wrapping your model using `torchaudio`](#wrapping)
-4. [Creating a metadata document](#creating-metadata) 
-5. [Exporting to HuggingFace](#exporting)
+2. [Wrapping your model using `torchaudio`](#wrapping)
+3. [Creating a metadata document](#creating-metadata) 
+4. [Exporting to HuggingFace](#exporting)
 
 <a name="developing"/>
 
