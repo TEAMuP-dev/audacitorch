@@ -13,7 +13,7 @@ setup(
     author_email='hf01049@georgiasouthern.edu',
     url='https://github.com/hugofloresgarcia/torchaudacity',
     install_requires=[
-        'torch==1.8.1',
+        'torch',
     ],
     packages=['torchaudacity'],
     package_data={'torchaudacity': ['assets/*']},
