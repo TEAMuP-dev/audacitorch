@@ -28,11 +28,8 @@ class WaveformToWaveform(AudacityModel):
   def forward(self, x: torch.Tensor) -> torch.Tensor:
     assert x.ndim == 2, "input must have two dimensions (channels, samples)"
     x = self.do_forward_pass(x)
-
-    # sum them back up into mono sources
-    x = x.sum(1, keepdim=False)
-    print(x.shape)
     assert x.ndim == 2, "output must have two dimensions (channels, samples)"
+    
     return x
 
   def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
