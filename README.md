@@ -279,6 +279,11 @@ To debug, you can access the error logs through the Help menu, in `Help->Diagnos
 
 ## Example - Exporting a Pretrained [Asteroid](https://github.com/asteroid-team/asteroid) model
 
-See this [example notebook](/notebooks/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
+See this [example notebook](notebooks/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
+
+
+## Example - Exporting a Pretrained [S2T](https://huggingface.co/facebook/s2t-medium-librispeech-asr) model
+
+See this [example notebook](notebooks/labeler-example.ipynb), where we serialize a pretrained speech to text trasnformer from Facebook.
 
 ---

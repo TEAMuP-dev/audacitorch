@@ -64,6 +64,7 @@ class WaveformToLabelsBase(AudacityModel):
                                     "labels and timestamps tensors must be equal"
     assert timestamps.shape[1] == 2, "second dimension of the timestamps tensor"\
                                       "must be size 2"
+    return output
 
   def do_forward_pass(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     """ 
