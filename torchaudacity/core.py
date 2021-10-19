@@ -5,27 +5,20 @@ from torch import nn
 class AudacityModel(nn.Module):
 
   def __init__(self, model: nn.Module):
+    """ creates an Audacity model, wrapping a child model (that does the real work)"""
     super().__init__()
+    model.eval()
     self.model = model
 
-  @torch.jit.ignore
-  def validate_metadata(self, metadata: dict):
-    # TODO: download the schema file from audacity and check w it
-    raise NotImplementedError()
-
-  @staticmethod
-  @torch.jit.ignore
-  def get_example_inputs():
-    """ 
-    returns a list of waveform audio tensors for testing,
-    shape (n_channels, n_samples). 
-    """ 
-    return [torch.randn(n, s) for (n, s) in zip([1 for _ in range(5)], 
-                                            [3200, 3498, 48000, 32000, 88000])]
-  
-class WaveformToWaveform(AudacityModel):
+class WaveformToWaveformBase(AudacityModel):
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
+    """ 
+    Internal forward pass for a WaveformToWaveform model. 
+
+    All this does is wrap the do_forward_pass(x) function in assertions that check 
+    that the correct input/output constraints are getting met. Nothing fancy. 
+    """
     assert x.ndim == 2, "input must have two dimensions (channels, samples)"
     x = self.do_forward_pass(x)
     assert x.ndim == 2, "output must have two dimensions (channels, samples)"
@@ -49,9 +42,15 @@ class WaveformToWaveform(AudacityModel):
     """
     raise NotImplementedError("implement me!")
 
-class WaveformToLabels(AudacityModel):
+class WaveformToLabelsBase(AudacityModel):
 
   def forward(self, x: torch.Tensor) -> torch.Tensor:
+    """ 
+    Internal forward pass for a WaveformToLabels model. 
+
+    All this does is wrap the do_forward_pass(x) function in assertions that check 
+    that the correct input/output constraints are getting met. Nothing fancy. 
+    """
     assert x.ndim == 2,  "input must have two dimensions (channels, samples)"
     output = self.do_forward_pass(x)
 
@@ -87,7 +86,7 @@ class WaveformToLabels(AudacityModel):
     """
     raise NotImplementedError("implement me!")
  
-class AsteroidWrapper(WaveformToWaveform):
+class AsteroidWrapper(WaveformToWaveformBase):
 
   def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
     return self.model.separate(x)[0]

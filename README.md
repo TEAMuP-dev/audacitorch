@@ -2,8 +2,6 @@
 
 This package contains utilities for prepping PyTorch audio models for use in Audacity. More specifically, it provides abstract classes for you to wrap your waveform-to-waveform and waveform-to-labels models (see the [Deep Learning for Audacity](https://interactiveaudiolab.github.io/projects/audacity) website to learn more about deep learning models for audacity).   
 
-![img](/torchaudacity/assets/whole-manager.png)
-
 ## Table of Contents
 
 - [Contributing Models to Audacity](#contrib)
@@ -17,15 +15,17 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 
 --- 
 
+![img](./assets/whole-manager.png)
+
 <a name="contrib"/>
 
 ## Contributing Models to Audacity
 
 Audacity is equipped with a wrapper framework for deep learning models written in PyTorch. Audacity contains two deep learning tools: `Deep Learning Effect` and `Deep Learning Analyzer`.  
 `Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
-`torchaudacity` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveform`, and `WaveformToLabels`, respectively. 
+`torchaudacity` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
 
-![](/torchaudacity/assets/tensor-flow.png)
+![](./assets/tensor-flow.png)
 
 <a name="effect-types"/> 
 
@@ -106,12 +106,10 @@ We can sum up the whole process into 4 steps:
 First, we create our model. There are no internal constraints on what the internal model architecture should be, as long as you can use `torch.jit.script` or `torch.jit.trace` to serialize it, and it is able to meet the input-output constraints specified in waveform-to-waveform and waveform-to-labels models. 
 
 ```python
+import torch
 import torch.nn as nn
 
 class MyVolumeModel(nn.Module):
-
-    def __init__(self):
-        super().__init__()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # do the neural net magic!
@@ -137,16 +135,12 @@ Useful links:
 
 ### Wrapping your model using `torchaudio`
 
-Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveform` as our parent class. For both `WaveformToWaveform` and `WaveformToLabels`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/torchaudacity/core.py) for more details. 
+Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. For both `WaveformToWaveformBase` and `WaveformToLabelsBase`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/torchaudacity/core.py) for more details. 
 
 ```python
-from torchaudacity import WaveformToWaveform
+from torchaudacity import WaveformToWaveformBase
 
-class MyVolumeModelWrapper(WaveformToWaveform):
-
-    def __init__(self, model):
-        model.eval()
-        self.model = model
+class MyVolumeModelWrapper(WaveformToWaveformBase):
     
     def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
         
@@ -185,7 +179,7 @@ All set! We can now proceed to serialize the model to torchscript and save the m
 
 ```python
 from pathlib import Path
-from torchaudacity import save_model
+from torchaudacity.utils import save_model
 
 # create a root dir for our model
 root = Path('booster-net')
@@ -199,7 +193,7 @@ wrapper = MyVolumeModelWrapper(model)
 
 # serialize it
 # an alternative is to use torch.jit.trace
-serialized_model = torch.jit.script(serialized_model)
+serialized_model = torch.jit.script(wrapper)
 
 # save!
 save_model(serialized_model, metadata, root)
