@@ -6,11 +6,12 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 
 - [Downloading Audacity with Deep Learning](#download)
 - [Contributing Models to Audacity](#contrib)
-- [Making Your Model Built-In to Audacity](#builtin)
 - [Choosing an Effect Type ](#effect-types)
     - [Waveform to Waveform models](#wav2wav)
     - [Waveform to Labels models](#wav2labels)
 - [Model Metadata](#metadata)
+- [Making Your Model Built-In to Audacity](#builtin)
+- [Debugging Your Model in Audacity](#debugging)
 - [Example - Waveform-to-Waveform](#example-wav2wav)
     - [Making sure your model is compatible with `torchscript`](#compat)
 - [Example - Exporting a Pretrained Asteroid Model](#example-asteroid)
@@ -102,6 +103,17 @@ required fields:
 ## Making Your Model Built-In To Audacity
 
 By default, users have to click on the `Add From HuggingFace` button on the Audacity Model Manager and enter the desired repo's ID to install a community contributed model. If you, instead, would like your community contributed model to show up in Audacity's Model Manager by default, please open a request [here](https://github.com/hugofloresgarcia/torchaudacity/issues/new?assignees=hugofloresgarcia&labels=model-contrib&template=built-in-model-request.md&title=Built-in+Model+Request%3A+MODEL_NAME). 
+
+
+<a name="debugging"/>
+
+## Debugging Your Model in Audacity
+
+If your model fails internally while processing audio, you may see something like this:
+
+![img](./assets/error.png)
+
+To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
 
 <a name="example-wav2wav"/>
 
