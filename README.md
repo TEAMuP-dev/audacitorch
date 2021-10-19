@@ -219,7 +219,7 @@ serialized_model = torch.jit.script(wrapper)
 # need to be extra careful that your serialized model behaves 
 # properly after tracing
 example_inputs = get_example_inputs()
-serialized_model = torch.jit.script(wrapper, example_inputs[0], 
+serialized_model = torch.jit.trace(wrapper, example_inputs[0], 
                                     check_inputs=example_inputs)
 
 # check that we did our metadata correctly
