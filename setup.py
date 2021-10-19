@@ -14,6 +14,7 @@ setup(
     url='https://github.com/hugofloresgarcia/torchaudacity',
     install_requires=[
         'torch',
+        'jsonschema'
     ],
     packages=['torchaudacity'],
     package_data={'torchaudacity': ['assets/*']},

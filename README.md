@@ -196,7 +196,7 @@ All set! We can now proceed to serialize the model to torchscript and save the m
 
 ```python
 from pathlib import Path
-from torchaudacity.utils import save_model
+from torchaudacity.utils import save_model, validate_metadata, get_example_inputs
 
 # create a root dir for our model
 root = Path('booster-net')
@@ -209,8 +209,21 @@ model = MyVolumeModel()
 wrapper = MyVolumeModelWrapper(model)
 
 # serialize it
-# an alternative is to use torch.jit.trace
+# option 1: torch.jit.script 
+# using torch.jit.script is preferred for most cases, 
+# but may require changing a lot of source code
 serialized_model = torch.jit.script(wrapper)
+
+# option 2: torch.jit.trace
+# using torch.jit.trace is typically easier, but you
+# need to be extra careful that your serialized model behaves 
+# properly after tracing
+example_inputs = get_example_inputs()
+serialized_model = torch.jit.script(wrapper, example_inputs[0], 
+                                    check_inputs=example_inputs)
+
+# check that we did our metadata correctly
+validate_metadata(metadata)
 
 # save!
 save_model(serialized_model, metadata, root)
