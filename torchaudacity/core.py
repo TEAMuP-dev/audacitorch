@@ -85,8 +85,3 @@ class WaveformToLabelsBase(AudacityModel):
 
     """
     raise NotImplementedError("implement me!")
- 
-class AsteroidWrapper(WaveformToWaveformBase):
-
-  def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
-    return self.model.separate(x)[0]
