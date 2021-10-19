@@ -264,7 +264,7 @@ After serializing, you may need to debug your model inside Audacity, to make sur
 While debugging, make sure your model isn't available through other users through the `Explore HuggingFace` button by temporarily removing the `audacity` tag from your README file.
 If your model fails internally while processing audio, you may see something like this:
 
-![img](/assets/error.png)
+<img src="/assets/error.png" width=300>
 
 To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
 
