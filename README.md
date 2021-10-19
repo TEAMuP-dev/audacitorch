@@ -6,6 +6,7 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 
 - [Downloading Audacity with Deep Learning](#download)
 - [Contributing Models to Audacity](#contrib)
+- [Making Your Model Built-In to Audacity](#builtin)
 - [Choosing an Effect Type ](#effect-types)
     - [Waveform to Waveform models](#wav2wav)
     - [Waveform to Labels models](#wav2labels)
@@ -52,6 +53,9 @@ Example models for waveform-to-waveform effects include source separation, neura
 
 Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class probabilities for each label present in the waveform, shape `(num_timesteps, num_classes)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
 
+### What If My Model Uses a Spectrogram as Input/Output?
+
+If your model uses a spectrogram as input/output, you'll need to wrap your forward pass with some torchscript-compatible preprocessing/postprocessing. We recommend using [torchaudio](https://pytorch.org/audio/stable/index.html), writing your own preprocessing transforms in their own `nn.Module`, or writing your PyTorch-only preprocessing and placing it in `WaveformToWaveform.do_forward_pass` or `WaveformToLabels.do_forward_pass`. See the [compatibility](#compat) section for more info.  
 
 <a name="metadata"/>
 
@@ -93,6 +97,12 @@ required fields:
 
 ---
 
+<a name="builtin"/>
+
+## Making Your Model Built-In To Audacity
+
+By default, users have to click on the `Add HuggingFace Repo` button on the Audacity Model Manager and enter the desired repo's ID to install a community contributed model. If you, instead, would like your community contributed model to show up in Audacity's Model Manager by default, please open a request [here](https://github.com/hugofloresgarcia/torchaudacity/issues/new?assignees=hugofloresgarcia&labels=model-contrib&template=built-in-model-request.md&title=Built-in+Model+Request%3A+MODEL_NAME). 
+
 <a name="example-wav2wav"/>
 
 ## Example - Waveform-to-Waveform model
@@ -102,7 +112,7 @@ Here's a minimal example for a model that simply boosts volume by multiplying th
 We can sum up the whole process into 4 steps:
 
 1. [Developing your model](#developing)
-2. [Wrapping your model using `torchaudio`](#wrapping)
+2. [Wrapping your model using `torchaudacity`](#wrapping)
 3. [Creating a metadata document](#creating-metadata) 
 4. [Exporting to HuggingFace](#exporting)
 
@@ -140,7 +150,7 @@ Useful links:
 
 <a name="wrapping"/>
 
-### Wrapping your model using `torchaudio`
+### Wrapping your model using `torchaudacity`
 
 Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. For both `WaveformToWaveformBase` and `WaveformToLabelsBase`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/torchaudacity/core.py) for more details. 
 
