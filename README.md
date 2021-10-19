@@ -104,17 +104,6 @@ required fields:
 
 By default, users have to click on the `Add From HuggingFace` button on the Audacity Model Manager and enter the desired repo's ID to install a community contributed model. If you, instead, would like your community contributed model to show up in Audacity's Model Manager by default, please open a request [here](https://github.com/hugofloresgarcia/torchaudacity/issues/new?assignees=hugofloresgarcia&labels=model-contrib&template=built-in-model-request.md&title=Built-in+Model+Request%3A+MODEL_NAME). 
 
-
-<a name="debugging"/>
-
-## Debugging Your Model in Audacity
-
-If your model fails internally while processing audio, you may see something like this:
-
-![img](./assets/error.png)
-
-To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
-
 <a name="example-wav2wav"/>
 
 ## Example - Waveform-to-Waveform model
@@ -266,6 +255,19 @@ tags: audacity
 ```
 
 Awesome! It's time to push to HuggingFace. See their [documentation](https://huggingface.co/docs/hub/adding-a-model) for adding a model to the HuggingFace model hub. 
+
+<a name="debugging"/>
+
+## Debugging Your Model in Audacity
+
+After serializing, you may need to debug your model inside Audacity, to make sure that it handles inputs correctly, doesn't crash while processing, and produces the correct output. 
+While debugging, make sure your model isn't available through other users through the `Explore HuggingFace` button by temporarily removing the `audacity` tag from your README file.
+If your model fails internally while processing audio, you may see something like this:
+
+![img](./assets/error.png)
+
+To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
+
 
 <a name="example-asteroid"/>
 
