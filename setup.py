@@ -6,18 +6,18 @@ with open('README.md') as file:
 
 
 setup(
-    name='torchaudacity',
+    name='audacitorch',
     description='',
     version='0.0.1',
     author='Hugo Flores Garcia',
     author_email='hf01049@georgiasouthern.edu',
-    url='https://github.com/hugofloresgarcia/torchaudacity',
+    url='https://github.com/hugofloresgarcia/audacitorch',
     install_requires=[
         'torch==1.9.0',
         'jsonschema'
     ],
-    packages=['torchaudacity'],
-    package_data={'torchaudacity': ['assets/*']},
+    packages=['audacitorch'],
+    package_data={'audacitorch': ['assets/*']},
     include_package_data=False,
     long_description=long_description,
     long_description_content_type='text/markdown',

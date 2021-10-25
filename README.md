@@ -1,4 +1,4 @@
-# torchaudacity
+# audacitorch
 
 This package contains utilities for prepping PyTorch audio models for use in Audacity. More specifically, it provides abstract classes for you to wrap your waveform-to-waveform and waveform-to-labels models (see the [Deep Learning for Audacity](https://interactiveaudiolab.github.io/project/audacity) website to learn more about deep learning models for audacity).   
 
@@ -32,13 +32,13 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 
 ### Supported Torch versions
 
-`torchaudacity` requires for your model to be able to run in **Torch 1.9.0**, as that's what the Audacity torchscript interpreter uses. 
+`audacitorch` requires for your model to be able to run in **Torch 1.9.0**, as that's what the Audacity torchscript interpreter uses. 
 
 ### Deep Learning Effect and Analyzer
 
 Audacity is equipped with a wrapper framework for deep learning models written in PyTorch. Audacity contains two deep learning tools: `Deep Learning Effect` and `Deep Learning Analyzer`.  
 `Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
-`torchaudacity` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
+`audacitorch` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
 
 ![](./assets/tensor-flow.png)
 
@@ -108,7 +108,7 @@ required fields:
 
 ## Making Your Model Built-In To Audacity
 
-By default, users have to click on the `Add From HuggingFace` button on the Audacity Model Manager and enter the desired repo's ID to install a community contributed model. If you, instead, would like your community contributed model to show up in Audacity's Model Manager by default, please open a request [here](https://github.com/hugofloresgarcia/torchaudacity/issues/new?assignees=hugofloresgarcia&labels=model-contrib&template=built-in-model-request.md&title=Built-in+Model+Request%3A+MODEL_NAME). 
+By default, users have to click on the `Add From HuggingFace` button on the Audacity Model Manager and enter the desired repo's ID to install a community contributed model. If you, instead, would like your community contributed model to show up in Audacity's Model Manager by default, please open a request [here](https://github.com/hugofloresgarcia/audacitorch/issues/new?assignees=hugofloresgarcia&labels=model-contrib&template=built-in-model-request.md&title=Built-in+Model+Request%3A+MODEL_NAME). 
 
 <a name="example-wav2wav"/>
 
@@ -119,7 +119,7 @@ Here's a minimal example for a model that simply boosts volume by multiplying th
 We can sum up the whole process into 4 steps:
 
 1. [Developing your model](#developing)
-2. [Wrapping your model using `torchaudacity`](#wrapping)
+2. [Wrapping your model using `audacitorch`](#wrapping)
 3. [Creating a metadata document](#creating-metadata) 
 4. [Exporting to HuggingFace](#exporting)
 
@@ -157,12 +157,12 @@ Useful links:
 
 <a name="wrapping"/>
 
-### Wrapping your model using `torchaudacity`
+### Wrapping your model using `audacitorch`
 
-Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. For both `WaveformToWaveformBase` and `WaveformToLabelsBase`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/torchaudacity/core.py) for more details. 
+Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. For both `WaveformToWaveformBase` and `WaveformToLabelsBase`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/audacitorch/core.py) for more details. 
 
 ```python
-from torchaudacity import WaveformToWaveformBase
+from audacitorch import WaveformToWaveformBase
 
 class MyVolumeModelWrapper(WaveformToWaveformBase):
     
@@ -203,7 +203,7 @@ All set! We can now proceed to serialize the model to torchscript and save the m
 
 ```python
 from pathlib import Path
-from torchaudacity.utils import save_model, validate_metadata, get_example_inputs
+from audacitorch.utils import save_model, validate_metadata, get_example_inputs
 
 # create a root dir for our model
 root = Path('booster-net')

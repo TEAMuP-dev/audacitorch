@@ -11,7 +11,7 @@ def save_model(model: torch.jit.ScriptModule, metadata: dict, root_dir: Path):
 
   Args:
       model: your Audacity-ready serialized model, using either torch.jit.trace or torch.jit.script. 
-        Should derive from torchaudacity.WaveformToWaveformBase or torchaudacity.WaveformToLabelsBase.
+        Should derive from audacitorch.WaveformToWaveformBase or audacitorch.WaveformToLabelsBase.
       metadata: a metadata dictionary. Shoule be validated using torchaudio.utils.validate_metadata()
 
   Returns:
