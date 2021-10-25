@@ -32,7 +32,7 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 
 ### Supported Torch versions
 
-`torchaudacity` requires for your model to be able to run in **Torch 1.9.0**, as that's what the Audacity torchscript interpreter uses. 
+`torchaudacity` requires for your model to be able to run in **Torch 1.8.1**, as that's what the Audacity torchscript interpreter uses. 
 
 ### Deep Learning Effect and Analyzer
 
