@@ -236,7 +236,8 @@ serialized_model = torch.jit.trace(wrapper, example_inputs[0],
 test_run(serialized_model)
 
 # check that we created our metadata correctly
-validate_metadata(metadata)
+success, msg = validate_metadata(metadata)
+assert success
 
 # save!
 save_model(serialized_model, metadata, root)
