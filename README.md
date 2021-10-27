@@ -203,7 +203,8 @@ All set! We can now proceed to serialize the model to torchscript and save the m
 
 ```python
 from pathlib import Path
-from audacitorch.utils import save_model, validate_metadata, get_example_inputs
+from audacitorch.utils import save_model, validate_metadata, \
+                              get_example_inputs, test_run
 
 # create a root dir for our model
 root = Path('booster-net')
@@ -215,7 +216,9 @@ model = MyVolumeModel()
 # wrap it
 wrapper = MyVolumeModelWrapper(model)
 
-# serialize it
+# serialize it using torch.jit.script, torch.jit.trace,
+# or a combination of both. 
+
 # option 1: torch.jit.script 
 # using torch.jit.script is preferred for most cases, 
 # but may require changing a lot of source code
@@ -229,7 +232,10 @@ example_inputs = get_example_inputs()
 serialized_model = torch.jit.trace(wrapper, example_inputs[0], 
                                     check_inputs=example_inputs)
 
-# check that we did our metadata correctly
+# take your model for a test run!
+test_run(serialized_model)
+
+# check that we created our metadata correctly
 validate_metadata(metadata)
 
 # save!

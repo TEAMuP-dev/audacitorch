@@ -1,6 +1,7 @@
 from pathlib import Path
 import random
 from typing import Tuple
+from audacitorch import AudacityModel
 
 import torch
 import json
@@ -37,13 +38,30 @@ def get_example_inputs(multichannel: bool = False):
   Possible inputs are audio tensors with shape (n_channels, n_samples). 
   If multichannel == False, n_channels will always be 1. 
   """
-  max_channels = 10 if multichannel else 1
+  max_channels = 2 if multichannel else 1
   num_inputs = 10
   channels = [random.randint(1, max_channels) for _ in range(num_inputs)]
   sizes = [random.randint(2048, 396000) for _ in range(num_inputs)]
   return [
     torch.randn((c, s)) for c, s in  zip(channels, sizes)
   ]
+
+def test_run(model: AudacityModel, multichannel: bool = False):
+  """ 
+  Performs a couple of test forward passes with audio tensors of different sizes.
+  Possible inputs are audio tensors with shape (n_channels, n_samples). 
+  If the model fails to meet the input/output requirements of either WaveformToWaveformBase or WaveformToLabelsBase, 
+    an assertion will be triggered by the respective class. 
+
+    Args:
+      model (AudacityModel): Your model, wrapped in either WaveformToWaveformBase or WaveformToLabelsBase
+      multichannel (bool): if False, the number of input audio channels will always equal to 1. Otherwise, 
+                           some stereo test input arrays will be generated.  
+  Returns:
+    
+  """
+  for x in get_example_inputs(multichannel):
+    model(x)
 
 def load_schema():
     """loads the audacity deep learning json schema for metadata"""
@@ -57,7 +75,6 @@ def load_schema():
 
     return schema
 
-
 def validate_metadata(metadata: dict) -> Tuple[bool, str]:
   """validate a model metadata dict using Audacity's metadata schema
 
@@ -65,7 +82,7 @@ def validate_metadata(metadata: dict) -> Tuple[bool, str]:
       metadata (dict): the metadata dictionary to validate
 
   Returns:
-      boolean-str tuple, where the  bool indicates success, and 
+      Tuple[bool, str], where the  bool indicates success, and 
       the string contains an error/success message
   """
   import jsonschema
