@@ -33,7 +33,7 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 You can download audacitorch using pip, the command to do so is found below:
 
 ```
-pip install audacitorch==0.0.1
+pip install audacitorch
 ```
 
 <a name="contrib"/>
