@@ -2,6 +2,11 @@ from typing import Tuple
 import torch
 from torch import nn
 
+def _waveform_check(x: torch.Tensor):
+  assert x.ndim == 2, "input must have two dimensions (channels, samples)"
+  assert x.shape[-1] > x.shape[0], f"The number of channels {x.shape[-2]} exceeds the number of samples {x.shape[-1]} in your INPUT waveform. \
+                                      There might be something wrong with your model. "
+
 class AudacityModel(nn.Module):
 
   def __init__(self, model: nn.Module):
@@ -19,9 +24,9 @@ class WaveformToWaveformBase(AudacityModel):
     All this does is wrap the do_forward_pass(x) function in assertions that check 
     that the correct input/output constraints are getting met. Nothing fancy. 
     """
-    assert x.ndim == 2, "input must have two dimensions (channels, samples)"
+    _waveform_check(x)
     x = self.do_forward_pass(x)
-    assert x.ndim == 2, "output must have two dimensions (channels, samples)"
+    _waveform_check(x)
     
     return x
 
@@ -51,7 +56,7 @@ class WaveformToLabelsBase(AudacityModel):
     All this does is wrap the do_forward_pass(x) function in assertions that check 
     that the correct input/output constraints are getting met. Nothing fancy. 
     """
-    assert x.ndim == 2,  "input must have two dimensions (channels, samples)"
+    _waveform_check(x)
     output = self.do_forward_pass(x)
 
     assert isinstance(output, tuple), "waveform-to-labels output must be a tuple"
