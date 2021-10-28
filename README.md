@@ -30,7 +30,7 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 
 <a name="pip"/>
 
-You can download audacitorch using pip, the command to do so is found below:
+You can install `audacitorch` using pip: 
 
 ```
 pip install audacitorch
@@ -68,7 +68,7 @@ Example models for waveform-to-waveform effects include source separation, neura
 
 ### Waveform to Labels models
 
-Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class probabilities for each label present in the waveform, shape `(num_timesteps, num_classes)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
+Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class indexes for each label present in the waveform, shape `(num_timesteps,)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
 
 ### What If My Model Uses a Spectrogram as Input/Output?
 
@@ -79,7 +79,6 @@ If your model uses a spectrogram as input/output, you'll need to wrap your forwa
 ## Model Metadata
 
 Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. 
-For waveform-to-label models, the model contributor may include an optional confidence threshold, where predictions with a probability lower than the confidence threshold are labeled as ``uncertain''. 
 
 #### Metadata Spec
 
@@ -105,7 +104,7 @@ required fields:
     -  **waveform-to-waveform**
         -  name of each output source (e.g. `drums`, `bass`, `vocal`). To create the track name for each output source, each one of the labels will be appended to the mixture track's name.
     -  **waveform-to-labels**:
-        -  labeler models should output a list of class probabilities with shape `(n_timesteps, n_class)` and a list of start/stop timestamps for each label `(n_timesteps, 2)`. The labeler effect will create a add new labels by taking the argmax of each class probability and indexing into the metadata's `labels`. 
+        -  This should be classlist for model. The class indexes output by the model during a forward pass will be used to index into this classlist.  
 -  `effect_type` (`str`)
     -  Target effect for this model. Must be one of `["waveform-to-waveform", "waveform-to-labels"]`. 
 -  `multichannel` (`bool`)
