@@ -65,12 +65,12 @@ class WaveformToLabelsBase(AudacityModel):
     labels = output[0]
     timestamps = output[1]
 
-    assert torch.all(timestamps >= 0).item()
+    assert torch.all(timestamps >= 0).item(), f"found a timestamp that is less than zero". 
 
     for timestamp in timestamps:
-      assert timestamp[0] < timestamp[1]
+      assert timestamp[0] < timestamp[1], f"timestamp ends ({timestamp[1]}) before it starts ({timestamp[0]})
 
-    assert labels.ndim == 1
+    assert labels.ndim == 1, "labels tensor should be one dimensional"
 
     assert labels.shape[0] == timestamps.shape[0], "time dimension between "\
                                     "labels and timestamps tensors must be equal"
