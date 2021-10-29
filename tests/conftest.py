@@ -50,4 +50,21 @@ def wav2wavmodel():
     model = MyVolumeModel()
     return MyVolumeModelWrapper(model)
 
-
+@pytest.fixture
+def wav2labelmodel():
+    from audacitorch import WaveformToLabelsBase
+    import torch
+    import torch.nn as nn
+    
+    class EmptyModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+        
+    class HardCodedLabeler(WaveformToLabelsBase):
+        def do_forward_pass(self, _input):
+            timestamps = torch.tensor([[0, 0.5, 0.5, 2, 5, 2.8, 3.5, 2.5, 5.5],[1, 1.5, 1.25, 3, 7, 3.5, 4, 4, 6.5]])
+            preds = torch.tensor([0, 0, 1, 2, 0, 1, 2, 3, 0])
+            return (preds, timestamps.T)
+        
+    model = EmptyModel()
+    return HardCodedLabeler(model)
