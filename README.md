@@ -300,6 +300,6 @@ See this [example notebook](notebooks/example.ipynb), where we serialize a pretr
 
 ## Example - Exporting a Pretrained [S2T](https://huggingface.co/facebook/s2t-medium-librispeech-asr) model
 
-See this [example notebook](notebooks/labeler-example.ipynb), where we serialize a pretrained speech to text trasnformer from Facebook.
+See this [example notebook](notebooks/labeler-example.ipynb), where we serialize a pretrained speech to text transformer from Facebook.
 
 ---
