@@ -4,7 +4,7 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 
 ## Table of Contents
 - [Downloading Audacity with Deep Learning](#download)
-- [Installation Via Pip](#pip)
+- [Installing](#pip)
 - [Contributing Models to Audacity](#contrib)
 - [Choosing an Effect Type ](#effect-types)
     - [Waveform to Waveform models](#wav2wav)
@@ -26,7 +26,7 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 
 Our work has not yet been merged to the main build of Audacity, though it will be soon. You can keep track of its progress by viewing our [pull request](https://github.com/audacity/audacity/pull/1384). In the meantime, you can download an alpha version of [Audacity + Deep Learning here](https://interactiveaudiolab.github.io/project/audacity.html).
 
-## Download `audacitorch` Using Pip
+## Installing
 
 <a name="pip"/>
 
