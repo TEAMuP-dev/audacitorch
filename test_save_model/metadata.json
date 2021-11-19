@@ -1,0 +1,1 @@
+{"sample_rate": 48000, "domain_tags": ["music", "speech", "environmental"], "short_description": "Use me to boost volume by 3dB :).", "long_description": "This description can be a max of 280 characters aaaaaaaaaaaaaaaaaaaa.", "tags": ["volume boost"], "labels": ["boosted"], "effect_type": "waveform-to-waveform", "multichannel": false}

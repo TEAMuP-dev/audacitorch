@@ -33,7 +33,7 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 You can install `audacitorch` using pip: 
 
 ```
-pip install audacitorch
+pip install -e "git+https://github.com/hugofloresgarcia/audacitorch.git#egg=audacitorch"
 ```
 
 <a name="contrib"/>
