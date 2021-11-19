@@ -49,7 +49,7 @@ class WaveformToWaveformBase(AudacityModel):
 
 class WaveformToLabelsBase(AudacityModel):
 
-  def forward(self, x: torch.Tensor) -> torch.Tensor:
+  def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     """ 
     Internal forward pass for a WaveformToLabels model. 
 
