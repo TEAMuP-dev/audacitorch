@@ -50,6 +50,8 @@ Audacity is equipped with a wrapper framework for deep learning models written i
 `Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
 `audacitorch` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
 
+<a name="effect-diagram"/> 
+
 ![](./assets/tensor-flow.png)
 
 <a name="effect-types"/> 
@@ -60,7 +62,7 @@ Audacity is equipped with a wrapper framework for deep learning models written i
 
 ### Waveform to Waveform models
 
-Waveform-to-waveform models receive a single multichannel audio track as input, and may write to a variable number of new audio tracks as output.
+As shown in the [effect diagram](#effect-diagram), Waveform-to-waveform models receive a single multichannel audio track as input, and may write to a variable number of new audio tracks as output.
 
 Example models for waveform-to-waveform effects include source separation, neural upsampling, guitar amplifier emulation, generative models, etc. Output tensors for waveform-to-waveform models must be multichannel waveform tensors with shape `(num_output_channels, num_samples)`. For every audio waveform in the output tensor, a new audio track is created in the Audacity project. 
 
@@ -68,7 +70,7 @@ Example models for waveform-to-waveform effects include source separation, neura
 
 ### Waveform to Labels models
 
-Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class indexes for each label present in the waveform, shape `(num_timesteps,)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
+As shown in the [effect diagram](#effect-diagram), Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class indexes for each label present in the waveform, shape `(num_timesteps,)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
 
 ### What If My Model Uses a Spectrogram as Input/Output?
 
