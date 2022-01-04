@@ -50,13 +50,13 @@ Audacity is equipped with a wrapper framework for deep learning models written i
 `Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
 `audacitorch` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
 
-<a name="effect-diagram"/> 
-
-![](./assets/tensor-flow.png)
-
 <a name="effect-types"/> 
 
 ## Choosing an Effect Type 
+
+<a name="effect-diagram"/> 
+
+![](./assets/tensor-flow.png)
 
 <a name="wav2wav"/> 
 
