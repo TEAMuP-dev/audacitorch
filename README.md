@@ -274,7 +274,8 @@ Create a `README.md` inside `booster-net/`, and add the following header:
 in README.md
 ```
 ---
-tags: audacity
+tags:
+- audacity
 ---
 ```
 
