@@ -1,11 +1,35 @@
 from typing import Tuple
 import torch
 from torch import nn
+from abc import abstractmethod
 
 def _waveform_check(x: torch.Tensor):
   assert x.ndim == 2, "input must have two dimensions (channels, samples)"
   assert x.shape[-1] > x.shape[0], f"The number of channels {x.shape[-2]} exceeds the number of samples {x.shape[-1]} in your INPUT waveform. \
                                       There might be something wrong with your model. "
+
+def _labels_check(y: Tuple):
+  assert isinstance(y, tuple), "waveform-to-labels output must be a tuple"
+  assert len(y) == 2, "output tuple must have two elements, e.g. tuple(labels, timestamps)"
+
+  labels, timestamps = y
+
+  assert torch.all(timestamps >= 0).item(), f"found a timestamp that is less than zero"
+
+  for timestamp in timestamps:
+    assert timestamp[0] < timestamp[1], f"timestamp ends ({timestamp[1]}) before it starts ({timestamp[0]})"
+
+  assert labels.ndim == 1, "labels tensor should be one dimensional"
+
+  assert labels.shape[0] == timestamps.shape[0], "time dimension between " \
+                                                 "labels and timestamps tensors must be equal"
+  assert timestamps.shape[1] == 2, "second dimension of the timestamps tensor" \
+                                   "must be size 2"
+
+# TODO - update object with actual MIDI type once decided
+def _midi_check(z: object):
+  # TODO
+  assert True
 
 class AudacityModel(nn.Module):
 
@@ -43,7 +67,7 @@ class WaveformToWaveformBase(AudacityModel):
 
     Returns:
         torch.Tensor: Output tensor, shape (n_sources, n_samples). Each source 
-                      will be  
+                      will be TODO
     """
     raise NotImplementedError("implement me!")
 
@@ -58,24 +82,8 @@ class WaveformToLabelsBase(AudacityModel):
     """
     _waveform_check(x)
     output = self.do_forward_pass(x)
+    _labels_check(output)
 
-    assert isinstance(output, tuple), "waveform-to-labels output must be a tuple"
-    assert len(output) == 2, "output tuple must have two elements, e.g. tuple(labels, timestamps)"
-
-    labels = output[0]
-    timestamps = output[1]
-
-    assert torch.all(timestamps >= 0).item(), f"found a timestamp that is less than zero"
-
-    for timestamp in timestamps:
-      assert timestamp[0] < timestamp[1], f"timestamp ends ({timestamp[1]}) before it starts ({timestamp[0]})"
-
-    assert labels.ndim == 1, "labels tensor should be one dimensional"
-
-    assert labels.shape[0] == timestamps.shape[0], "time dimension between "\
-                                    "labels and timestamps tensors must be equal"
-    assert timestamps.shape[1] == 2, "second dimension of the timestamps tensor"\
-                                      "must be size 2"
     return output
 
   def do_forward_pass(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -96,5 +104,36 @@ class WaveformToLabelsBase(AudacityModel):
             timestamps with start and end times for each label, 
             shape `(n_timesteps, 2)`. 
 
+    """
+    raise NotImplementedError("implement me!")
+
+class WaveformToMidiBase(AudacityModel):
+
+  def forward(self, x: torch.Tensor) -> object:
+    """
+    Internal forward pass for a WaveformToMidi model.
+
+    All this does is wrap the do_forward_pass(x) function in assertions that check
+    that the correct input/output constraints are getting met. Nothing fancy.
+    """
+    _waveform_check(x)
+    mid = self.do_forward_pass(x)
+    _midi_check(mid)
+
+    return mid
+
+  def do_forward_pass(self, x: torch.Tensor) -> object:
+    """
+    Perform a forward pass on a waveform-to-midi model.
+
+    Args:
+        x : An input audio waveform tensor. If `"multichannel" == True` in the
+            model's `metadata.json`, then this tensor will always be shape
+            `(1, n_samples)`, as all incoming audio will be downmixed first.
+            Otherwise, expect `x` to be a multichannel waveform tensor with
+            shape `(n_channels, n_samples)`.
+
+    Returns:
+        object: TODO
     """
     raise NotImplementedError("implement me!")
