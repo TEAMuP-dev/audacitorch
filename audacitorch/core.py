@@ -118,7 +118,8 @@ class WaveformToMidiBase(AudacityModel):
     """
     _waveform_check(x)
     mid = self.do_forward_pass(x)
-    _midi_check(mid)
+    # TODO - use lookup table to convert to integers (tokens)
+    _midi_check(mid) # TODO - or tokens check
 
     return mid
 

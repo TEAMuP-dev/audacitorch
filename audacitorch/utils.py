@@ -65,13 +65,9 @@ def test_run(model: AudacityModel, multichannel: bool = False):
 
 def load_schema():
     """loads the audacity deep learning json schema for metadata"""
-    from urllib.request import urlopen
 
-    url = 'https://raw.githubusercontent.com/hugofloresgarcia/audacity/deeplearning/deeplearning-models/modelcard-schema.json'
-
-    response = urlopen(url)
-
-    schema = json.loads(response.read())
+    with open('audacitorch/modelcard-schema.json') as f:
+      schema = json.load(f)
 
     return schema
 
