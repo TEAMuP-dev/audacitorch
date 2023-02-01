@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-from torchaudio.functional import detect_pitch_frequency, loudness
-from torchaudio.transforms import Spectrogram
 
 
 # TODO - see https://pytorch.org/docs/stable/jit.html
@@ -10,33 +8,42 @@ from torchaudio.transforms import Spectrogram
 
 class MyMidiModel(nn.Module):
 
-    def __init__(self, n_fft, sample_rate, hop_length):
+    def __init__(self):
         super().__init__()
 
-        self.n_fft = n_fft
-        self.sample_rate = sample_rate
-        self.spec = Spectrogram(n_fft=n_fft, hop_length=hop_length, normalized=True)
+        self.conv0 = nn.Conv1d(1, 256, 1024, stride=512)
+        self.bn0 = nn.BatchNorm1d(256)
+
+        self.conv1 = nn.Conv2d(1, 16, (3, 3), padding="same")
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 16, (3, 3), padding="same")
+        self.bn2 = nn.BatchNorm2d(16)
+        self.conv3 = nn.Conv2d(16, 1, (3, 3), padding="same")
+        self.relu = nn.ReLU()
+
+        self.linear = nn.Linear(1025, 88)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # do the neural net magic!
-        silence = torch.zeros(24000)
-        sinusoid = torch.sin(2 * torch.pi * 440 * torch.arange(48000) / 48000)
-        example_sinusoid = torch.cat((silence, sinusoid, silence))
-        #x = detect_pitch_frequency(sinusoid, 48000, win_length=5, freq_low=hz_min, freq_high=hz_max)
-        x = self.spec(example_sinusoid)
-        x /= torch.max(x)
 
-        x = torch.threshold(x, 0.8, 0)
+        x = self.conv0(x)
+        x = self.bn0(x)
+        x = self.relu(x)
+        x = x.unsqueeze(1)
 
-        freq_bins = torch.arange(1 + self.n_fft // 2) * self.sample_rate / self.n_fft
+        x = torch.transpose(x, 2, 3)
 
-        freq_bins = 12 * (torch.log2(freq_bins / 440.0)) + 69
+        # input is (batch, channels, time, freq)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.conv3(x)  # (batch, 1, time, freq)
 
-        pitch_activations = torch.zeros((88, x.shape[-1]))
+        x = x.squeeze(1)
 
-        # TODO - compute spectrogram
-        # TODO - perform peak-picking and thresholding
-        # TODO - end up with frame-level pitch activations
+        x = self.linear(x)
 
         return x
 
@@ -46,22 +53,14 @@ from audacitorch import WaveformToMidiBase
 
 class MyMidiModelWrapper(WaveformToMidiBase):
 
-    def __init__(self, model, sample_rate, hop_length):
-        super().__init__(model)
-
-        self.sample_rate = sample_rate
-        self.hop_length = hop_length
-
     def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
         # do any preprocessing here!
         # expect x to be a waveform tensor with shape (n_channels, n_samples)
 
-        x = torch.mean(x, dim=0)
+        output = self.model(x.unsqueeze(0)).squeeze(0)
 
-        output = self.model(x)
-
-        num_frames = 1 + len(x) // self.hop_length
-        times = torch.arange(num_frames) * self.hop_length / self.sample_rate
+        #num_frames = 1 + len(x) // self.hop_length
+        #times = torch.arange(num_frames) * self.hop_length / self.sample_rate
 
         # TODO - convert to list of notes (pitch, onset, offset, velocity)
         # TODO - convert to list of MIDI messages (https://mido.readthedocs.io/en/latest/messages.html#converting-to-bytes)
@@ -74,8 +73,8 @@ class MyMidiModelWrapper(WaveformToMidiBase):
 
 metadata = {
     'sample_rate': 48000,
-    'domain_tags': ['music', 'speech', 'environmental'],
-    'short_description': 'Use me to boost volume by 3dB :).',
+    'domain_tags': ['music'],
+    'short_description': 'Transcribe MIDI notes :).',
     'long_description': 'This description can be a max of 280 characters aaaaaaaaaaaaaaaaaaaa.',
     'tags': ['volume boost'],
     'labels': ['boosted'],
@@ -91,15 +90,11 @@ from audacitorch.utils import save_model, validate_metadata, \
 root = Path('booster-net')
 root.mkdir(exist_ok=True, parents=True)
 
-n_fft = 2048
-sample_rate = 48000
-hop_length = 512
-
 # get our model
-model = MyMidiModel(n_fft, sample_rate, hop_length)
+model = MyMidiModel()
 
 # wrap it
-wrapper = MyMidiModelWrapper(model, sample_rate, hop_length)
+wrapper = MyMidiModelWrapper(model)
 
 # serialize it using torch.jit.script, torch.jit.trace,
 # or a combination of both.
