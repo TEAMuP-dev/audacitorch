@@ -27,7 +27,7 @@ def _labels_check(y: Tuple):
                                    "must be size 2"
 
 # TODO - update object with actual MIDI type once decided
-def _midi_check(z: object):
+def _midi_check(z):
   # TODO
   assert True
 
@@ -109,7 +109,7 @@ class WaveformToLabelsBase(AudacityModel):
 
 class WaveformToMidiBase(AudacityModel):
 
-  def forward(self, x: torch.Tensor) -> object:
+  def forward(self, x: torch.Tensor):
     """
     Internal forward pass for a WaveformToMidi model.
 
@@ -123,7 +123,7 @@ class WaveformToMidiBase(AudacityModel):
 
     return mid
 
-  def do_forward_pass(self, x: torch.Tensor) -> object:
+  def do_forward_pass(self, x: torch.Tensor):
     """
     Perform a forward pass on a waveform-to-midi model.
 
@@ -138,3 +138,77 @@ class WaveformToMidiBase(AudacityModel):
         object: TODO
     """
     raise NotImplementedError("implement me!")
+
+  @staticmethod
+  @abstractmethod
+  @torch.jit.script
+  def salience_to_notes(salience, min_midi : float):
+    """
+    TODO
+    """
+
+    # Any pitches active in the first frame are considered onsets
+    first_frame = salience[..., :1]
+
+    # Subtract adjacent frames to determine where activity begins
+    adjacent_diff = salience[..., 1:] - salience[..., :-1]
+
+    # Combine the previous observations into a single representation
+    onsets = torch.cat((first_frame, adjacent_diff), dim=-1)
+
+    # Consider anything above zero an onset
+    onsets[onsets <= 0] = 0
+
+    # Determine the total number of frames
+    num_frames = salience.shape[-1]
+
+    non_zeros_idcs = onsets.nonzero()
+
+    num_notes = non_zeros_idcs.shape[0]
+
+    # Determine the pitch and frame indices where notes begin
+    pitch_idcs, frame_idcs = non_zeros_idcs[:, 0], non_zeros_idcs[:, 1]
+
+    # Create empty lists for note pitches and their time intervals
+    notes = torch.empty((num_notes, 3))
+
+    # Loop through note beginnings
+    for i, (pitch, frame) in enumerate(zip(pitch_idcs, frame_idcs)):
+        # Mark onset and start offset counter
+        onset, offset = frame.clone(), frame.clone()
+
+        # Increment the offset counter until one of the following occurs:
+        #  1. There are no more frames
+        #  2. Pitch is no longer active in the multi pitch array
+        #  3. A new onset occurs involving the current pitch
+        while True:
+            # There are no more frames to count
+            maxed_out = (offset + 1) == num_frames
+
+            if maxed_out:
+                # Stop looping
+                break
+
+            # There is an activation for the pitch at the next frame
+            active_pitch = salience[pitch, offset + 1]
+
+            if not active_pitch:
+                # Stop looping
+                break
+
+            # There is an onset for the pitch at the next frame
+            new_onset = onsets[pitch, offset + 1]
+
+            if new_onset:
+                # Stop looping
+                break
+
+            # Include the offset counter
+            offset += 1
+
+        # Add the frequency to the list
+        notes[i, 0] = onset.item()
+        notes[i, 1] = offset.item()
+        notes[i, 2] = pitch.item() + min_midi
+
+    return notes

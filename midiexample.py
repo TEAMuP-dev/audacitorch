@@ -2,10 +2,6 @@ import torch
 import torch.nn as nn
 
 
-# TODO - see https://pytorch.org/docs/stable/jit.html
-#        ... lots of good information here
-#        ... lots of ways to improve this (e.g. add better docs, hints, etc.)
-
 class MyMidiModel(nn.Module):
 
     def __init__(self):
@@ -21,7 +17,7 @@ class MyMidiModel(nn.Module):
         self.conv3 = nn.Conv2d(16, 1, (3, 3), padding="same")
         self.relu = nn.ReLU()
 
-        self.linear = nn.Linear(1025, 88)
+        self.linear = nn.Linear(256, 88)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
@@ -45,6 +41,8 @@ class MyMidiModel(nn.Module):
 
         x = self.linear(x)
 
+        x = torch.transpose(x, 1, 2)
+
         return x
 
 
@@ -59,10 +57,18 @@ class MyMidiModelWrapper(WaveformToMidiBase):
 
         output = self.model(x.unsqueeze(0)).squeeze(0)
 
+        output = torch.sigmoid(output)
+
+        threshold = torch.quantile(output, 0.95)
+
+        output[output < threshold] = 0
+        output[output >= threshold] = 1
+
         #num_frames = 1 + len(x) // self.hop_length
         #times = torch.arange(num_frames) * self.hop_length / self.sample_rate
 
-        # TODO - convert to list of notes (pitch, onset, offset, velocity)
+        notes = self.salience_to_notes(output, 0.)
+
         # TODO - convert to list of MIDI messages (https://mido.readthedocs.io/en/latest/messages.html#converting-to-bytes)
 
         # do any postprocessing here!
@@ -113,8 +119,6 @@ serialized_model = torch.jit.script(wrapper)
 #                                   check_inputs=example_inputs)
 
 # take your model for a test run!
-# TODO - see https://github.com/cwitkowitz/piano-transcription/blob/main/scripts/export.py
-#        for ideas about a better verification methodology
 test_run(wrapper)
 test_run(serialized_model)
 
