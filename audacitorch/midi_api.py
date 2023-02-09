@@ -76,9 +76,40 @@ class MidiTokenizer:
         assert 0 <= noteNumber <= 127
         assert 0 <= velocity <= 127
 
-        token = None
+        token = MidiTokenizer.getMaxNoteOnToken() + 1
+        token += velocity + noteNumber * NUM_VALUES + (channel - 1) * NUM_NUMBERS * NUM_VALUES
 
         return token
+
+    @staticmethod
+    def getMinNoteOffToken():
+
+        minToken = MidiTokenizer.getMaxNoteOnToken() + 1
+
+        return minToken
+
+    @staticmethod
+    def getMaxNoteOffToken():
+
+        maxToken = MidiTokenizer.getMinNoteOffToken() + NUM_CHANNELS * NUM_NUMBERS * NUM_VALUES - 1
+
+        return maxToken
+
+    @staticmethod
+    def isNoteOffToken(token):
+
+        isToken = MidiTokenizer.getMinNoteOffToken() <= token <= MidiTokenizer.getMaxNoteOffToken()
+
+        return isToken
+
+    @staticmethod
+    def decodeNoteOffToken(token):
+
+        assert MidiTokenizer.isNoteOffToken(token)
+
+        channel, noteNumber, velocity = MidiTokenizer.decodeNoteOnToken(token - MidiTokenizer.getMinNoteOffToken())
+
+        return channel, noteNumber, velocity
 
     """
     PROGRAM-CHANGE
@@ -117,5 +148,15 @@ class MidiTokenizer:
         channel = 0
         number = 0
         value = 0
+
+        if MidiTokenizer.isNoteOnToken(token):
+            message_type = MidiMessage.NoteOn.value
+
+            channel, number, value = MidiTokenizer.decodeNoteOnToken(token)
+        elif MidiTokenizer.isNoteOffToken(token):
+            message_type = MidiMessage.NoteOff.value
+
+            channel, number, value = MidiTokenizer.decodeNoteOffToken(token)
+        # TODO - other tokens
 
         return message_type, channel, number, value
