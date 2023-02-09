@@ -2,6 +2,7 @@ from typing import Tuple
 import torch
 from torch import nn
 from abc import abstractmethod
+from .midi_api import MidiTokenizer
 
 def _waveform_check(x: torch.Tensor):
   assert x.ndim == 2, "input must have two dimensions (channels, samples)"
@@ -212,3 +213,23 @@ class WaveformToMidiBase(AudacityModel):
         notes[i, 2] = pitch.item() + min_midi
 
     return notes
+
+  @staticmethod
+  @abstractmethod
+  #@torch.jit.script
+  def notes_to_midi(notes):
+
+    midi = None
+
+    onsets = notes[..., 0]
+    offsets = notes[..., 1]
+    pitches = notes[..., 2]
+
+    for i in range(len(pitches)):
+        onset = onsets[i]
+        offset = offsets[i]
+        pitch = pitches[i]
+
+        msg = None
+
+    return midi

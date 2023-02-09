@@ -69,7 +69,7 @@ class MyMidiModelWrapper(WaveformToMidiBase):
 
         notes = self.salience_to_notes(output, 0.)
 
-        # TODO - convert to list of MIDI messages (https://mido.readthedocs.io/en/latest/messages.html#converting-to-bytes)
+        midi = self.notes_to_midi(notes)
 
         # do any postprocessing here!
         # the return value should be TODO
