@@ -2,7 +2,7 @@ from typing import Tuple
 import torch
 from torch import nn
 from abc import abstractmethod
-from .midi_api import MidiTokenizer
+from .midi_api import *
 
 def _waveform_check(x: torch.Tensor):
   assert x.ndim == 2, "input must have two dimensions (channels, samples)"
