@@ -120,9 +120,45 @@ class MidiTokenizer:
         assert 1 <= channel <= 16
         assert 0 <= programNumber <= 127
 
-        token = None
+        token = MidiTokenizer.getMaxNoteOffToken() + 1
+        token += programNumber + (channel - 1) * NUM_NUMBERS
 
         return token
+
+    @staticmethod
+    def getMinProgramChangeToken():
+
+        minToken = MidiTokenizer.getMaxNoteOffToken() + 1
+
+        return minToken
+
+    @staticmethod
+    def getMaxProgramChangeToken():
+
+        maxToken = MidiTokenizer.getMinProgramChangeToken() + NUM_CHANNELS * NUM_NUMBERS - 1
+
+        return maxToken
+
+    @staticmethod
+    def isProgramChangeToken(token):
+
+        isToken = MidiTokenizer.getMinProgramChangeToken() <= token <= MidiTokenizer.getMaxProgramChangeToken()
+
+        return isToken
+
+    @staticmethod
+    def decodeProgramChangeToken(token):
+
+        assert MidiTokenizer.isProgramChangeToken(token)
+
+        relative_token = token - MidiTokenizer.getMinProgramChangeToken()
+
+        channel = relative_token // NUM_NUMBERS
+        programNumber = relative_token - channel * NUM_NUMBERS
+
+        channel += 1
+
+        return channel, programNumber
 
     """
     CONTROLLER-EVENT
@@ -138,17 +174,42 @@ class MidiTokenizer:
 
         return token
 
+    @staticmethod
+    def getMinControllerEventToken():
+
+        minToken = MidiTokenizer.getMaxProgramChangeToken() + 1
+
+        return minToken
+
+    @staticmethod
+    def getMaxControllerEventToken():
+
+        maxToken = MidiTokenizer.getMinControllerEventToken() + NUM_CHANNELS * NUM_NUMBERS * NUM_VALUES - 1
+
+        return maxToken
+
+    @staticmethod
+    def isControllerEventToken(token):
+
+        isToken = MidiTokenizer.getMinControllerEventToken() <= token <= MidiTokenizer.getMaxControllerEventToken()
+
+        return isToken
+
+    @staticmethod
+    def decodeControllerEventToken(token):
+
+        assert MidiTokenizer.isControllerEventToken(token)
+
+        channel, controllerType, value = MidiTokenizer.decodeNoteOnToken(token - MidiTokenizer.getMinControllerEventToken())
+
+        return channel, controllerType, value
+
     """
     DE-TOKENIZE
     """
     @staticmethod
     @torch.jit.script
     def decodeToken(token):
-        message_type = 0
-        channel = 0
-        number = 0
-        value = 0
-
         if MidiTokenizer.isNoteOnToken(token):
             message_type = MidiMessage.NoteOn.value
 
@@ -157,6 +218,17 @@ class MidiTokenizer:
             message_type = MidiMessage.NoteOff.value
 
             channel, number, value = MidiTokenizer.decodeNoteOffToken(token)
-        # TODO - other tokens
+        elif MidiTokenizer.isProgramChangeToken(token):
+            message_type = MidiMessage.ProgramChange.value
+
+            channel, number = MidiTokenizer.decodeProgramChangeToken(token)
+            value = 0
+        elif MidiTokenizer.isControllerEventToken(token):
+            message_type = MidiMessage.ControllerEvent.value
+
+            channel, number, value = MidiTokenizer.decodeControllerEventToken(token)
+        else:
+            # TODO - token not supported, throw error
+            print()
 
         return message_type, channel, number, value
