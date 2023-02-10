@@ -4,10 +4,6 @@ import torch
 
 # See https://docs.juce.com/master/tutorial_midi_message.html
 
-NUM_CHANNELS = 16
-NUM_NUMBERS = 128
-NUM_VALUES = 128
-
 
 class MidiMessage(Enum):
     NoteOn = 0
@@ -16,219 +12,227 @@ class MidiMessage(Enum):
     ControllerEvent = 3
 
 
-class MidiTokenizer:
+"""
+NOTE-ON
+"""
+def getNoteOnToken(channel, noteNumber, velocity):
+    num_channels = 16
+    num_notes = 128
+    num_velocities = 128
 
-    """
-    NOTE-ON
-    """
-    @staticmethod
-    def getNoteOnToken(channel, noteNumber, velocity):
+    assert 1 <= channel <= num_channels
+    assert 0 <= noteNumber <= (num_notes - 1)
+    assert 0 <= velocity <= (num_velocities - 1)
 
-        assert 1 <= channel <= 16
-        assert 0 <= noteNumber <= 127
-        assert 0 <= velocity <= 127
+    token = velocity + noteNumber * num_velocities + (channel - 1) * num_notes * num_velocities
 
-        token = velocity + noteNumber * NUM_VALUES + (channel - 1) * NUM_NUMBERS * NUM_VALUES
+    return token
 
-        return token
+def getMinNoteOnToken():
 
-    @staticmethod
-    def getMinNoteOnToken():
+    minToken = 0
 
-        minToken = 0
+    return minToken
 
-        return minToken
+def getMaxNoteOnToken():
+    num_channels = 16
+    num_notes = 128
+    num_velocities = 128
 
-    @staticmethod
-    def getMaxNoteOnToken():
+    maxToken = num_channels * num_notes * num_velocities - 1
 
-        maxToken = NUM_CHANNELS * NUM_NUMBERS * NUM_VALUES - 1
+    return maxToken
 
-        return maxToken
+def isNoteOnToken(token):
 
-    @staticmethod
-    def isNoteOnToken(token):
+    isToken = getMinNoteOnToken() <= token <= getMaxNoteOnToken()
 
-        isToken = MidiTokenizer.getMinNoteOnToken() <= token <= MidiTokenizer.getMaxNoteOnToken()
+    return isToken
 
-        return isToken
+def decodeNoteOnToken(token):
+    num_channels = 16
+    num_notes = 128
+    num_velocities = 128
 
-    @staticmethod
-    def decodeNoteOnToken(token):
+    assert isNoteOnToken(token)
 
-        assert MidiTokenizer.isNoteOnToken(token)
+    channel = token // (num_notes * num_velocities)
+    noteNumber = (token - channel * num_notes * num_velocities) // num_velocities
+    velocity = token - channel * num_notes * num_velocities - noteNumber * num_velocities
 
-        channel = token // (NUM_NUMBERS * NUM_VALUES)
-        noteNumber = (token - channel * NUM_NUMBERS * NUM_VALUES) // NUM_VALUES
-        velocity = token - channel * NUM_NUMBERS * NUM_VALUES - noteNumber * NUM_VALUES
+    channel += 1
 
-        channel += 1
+    return channel, noteNumber, velocity
 
-        return channel, noteNumber, velocity
+"""
+NOTE-OFF
+"""
+def getNoteOffToken(channel, noteNumber, velocity):
+    num_channels = 16
+    num_notes = 128
+    num_velocities = 128
 
-    """
-    NOTE-OFF
-    """
-    @staticmethod
-    def getNoteOffToken(channel, noteNumber, velocity):
+    assert 1 <= channel <= num_channels
+    assert 0 <= noteNumber <= (num_notes - 1)
+    assert 0 <= velocity <= (num_velocities - 1)
 
-        assert 1 <= channel <= 16
-        assert 0 <= noteNumber <= 127
-        assert 0 <= velocity <= 127
+    token = getMaxNoteOnToken() + 1
+    token += velocity + noteNumber * num_velocities + (channel - 1) * num_notes * num_velocities
 
-        token = MidiTokenizer.getMaxNoteOnToken() + 1
-        token += velocity + noteNumber * NUM_VALUES + (channel - 1) * NUM_NUMBERS * NUM_VALUES
+    return token
 
-        return token
+def getMinNoteOffToken():
 
-    @staticmethod
-    def getMinNoteOffToken():
+    minToken = getMaxNoteOnToken() + 1
 
-        minToken = MidiTokenizer.getMaxNoteOnToken() + 1
+    return minToken
 
-        return minToken
+def getMaxNoteOffToken():
+    num_channels = 16
+    num_notes = 128
+    num_velocities = 128
 
-    @staticmethod
-    def getMaxNoteOffToken():
+    maxToken = getMinNoteOffToken() + num_channels * num_notes * num_velocities - 1
 
-        maxToken = MidiTokenizer.getMinNoteOffToken() + NUM_CHANNELS * NUM_NUMBERS * NUM_VALUES - 1
+    return maxToken
 
-        return maxToken
+def isNoteOffToken(token):
 
-    @staticmethod
-    def isNoteOffToken(token):
+    isToken = getMinNoteOffToken() <= token <= getMaxNoteOffToken()
 
-        isToken = MidiTokenizer.getMinNoteOffToken() <= token <= MidiTokenizer.getMaxNoteOffToken()
+    return isToken
 
-        return isToken
+def decodeNoteOffToken(token):
 
-    @staticmethod
-    def decodeNoteOffToken(token):
+    assert isNoteOffToken(token)
 
-        assert MidiTokenizer.isNoteOffToken(token)
+    channel, noteNumber, velocity = decodeNoteOnToken(token - getMinNoteOffToken())
 
-        channel, noteNumber, velocity = MidiTokenizer.decodeNoteOnToken(token - MidiTokenizer.getMinNoteOffToken())
+    return channel, noteNumber, velocity
 
-        return channel, noteNumber, velocity
+"""
+PROGRAM-CHANGE
+"""
+def getProgramChangeToken(channel, programNumber):
+    num_channels = 16
+    num_programs = 128
 
-    """
-    PROGRAM-CHANGE
-    """
-    @staticmethod
-    def getProgramChangeToken(channel, programNumber):
+    assert 1 <= channel <= num_channels
+    assert 0 <= programNumber <= (num_programs - 1)
 
-        assert 1 <= channel <= 16
-        assert 0 <= programNumber <= 127
+    token = getMaxNoteOffToken() + 1
+    token += programNumber + (channel - 1) * num_programs
 
-        token = MidiTokenizer.getMaxNoteOffToken() + 1
-        token += programNumber + (channel - 1) * NUM_NUMBERS
+    return token
 
-        return token
+def getMinProgramChangeToken():
 
-    @staticmethod
-    def getMinProgramChangeToken():
+    minToken = getMaxNoteOffToken() + 1
 
-        minToken = MidiTokenizer.getMaxNoteOffToken() + 1
+    return minToken
 
-        return minToken
+def getMaxProgramChangeToken():
+    num_channels = 16
+    num_programs = 128
 
-    @staticmethod
-    def getMaxProgramChangeToken():
+    maxToken = getMinProgramChangeToken() + num_channels * num_programs - 1
 
-        maxToken = MidiTokenizer.getMinProgramChangeToken() + NUM_CHANNELS * NUM_NUMBERS - 1
+    return maxToken
 
-        return maxToken
+def isProgramChangeToken(token):
 
-    @staticmethod
-    def isProgramChangeToken(token):
+    isToken = getMinProgramChangeToken() <= token <= getMaxProgramChangeToken()
 
-        isToken = MidiTokenizer.getMinProgramChangeToken() <= token <= MidiTokenizer.getMaxProgramChangeToken()
+    return isToken
 
-        return isToken
+def decodeProgramChangeToken(token):
+    num_channels = 16
+    num_programs = 128
 
-    @staticmethod
-    def decodeProgramChangeToken(token):
+    assert isProgramChangeToken(token)
 
-        assert MidiTokenizer.isProgramChangeToken(token)
+    relative_token = token - getMinProgramChangeToken()
 
-        relative_token = token - MidiTokenizer.getMinProgramChangeToken()
+    channel = relative_token // num_programs
+    programNumber = relative_token - channel * num_programs
 
-        channel = relative_token // NUM_NUMBERS
-        programNumber = relative_token - channel * NUM_NUMBERS
+    channel += 1
 
-        channel += 1
+    return channel, programNumber
 
-        return channel, programNumber
+"""
+CONTROLLER-EVENT
+"""
+def getControllerEventToken(channel, controllerType, value):
+    num_channels = 16
+    num_controllers = 128
+    num_values = 128
 
-    """
-    CONTROLLER-EVENT
-    """
-    @staticmethod
-    def getControllerEventToken(channel, controllerType, value):
+    assert 1 <= channel <= num_channels
+    assert 0 <= controllerType <= (num_controllers - 1)
+    assert 0 <= value <= (num_values - 1)
 
-        assert 1 <= channel <= 16
-        assert 0 <= controllerType <= 127
-        assert 0 <= value <= 127
+    token = getMaxProgramChangeToken() + 1
+    token += value + controllerType * num_values + (channel - 1) * num_controllers * num_values
 
-        token = None
+    return token
 
-        return token
+def getMinControllerEventToken():
 
-    @staticmethod
-    def getMinControllerEventToken():
+    minToken = getMaxProgramChangeToken() + 1
 
-        minToken = MidiTokenizer.getMaxProgramChangeToken() + 1
+    return minToken
 
-        return minToken
+def getMaxControllerEventToken():
+    num_channels = 16
+    num_controllers = 128
+    num_values = 128
 
-    @staticmethod
-    def getMaxControllerEventToken():
+    maxToken = getMinControllerEventToken() + num_channels * num_controllers * num_values - 1
 
-        maxToken = MidiTokenizer.getMinControllerEventToken() + NUM_CHANNELS * NUM_NUMBERS * NUM_VALUES - 1
+    return maxToken
 
-        return maxToken
+def isControllerEventToken(token):
 
-    @staticmethod
-    def isControllerEventToken(token):
+    isToken = getMinControllerEventToken() <= token <= getMaxControllerEventToken()
 
-        isToken = MidiTokenizer.getMinControllerEventToken() <= token <= MidiTokenizer.getMaxControllerEventToken()
+    return isToken
 
-        return isToken
+def decodeControllerEventToken(token):
 
-    @staticmethod
-    def decodeControllerEventToken(token):
+    assert isControllerEventToken(token)
 
-        assert MidiTokenizer.isControllerEventToken(token)
+    channel, controllerType, value = decodeNoteOnToken(token - getMinControllerEventToken())
 
-        channel, controllerType, value = MidiTokenizer.decodeNoteOnToken(token - MidiTokenizer.getMinControllerEventToken())
+    return channel, controllerType, value
 
-        return channel, controllerType, value
+"""
+DE-TOKENIZE
+"""
+@staticmethod
+@torch.jit.script
+def decodeToken(token):
+    message_type, channel, number, value = -1, -1, -1, -1
 
-    """
-    DE-TOKENIZE
-    """
-    @staticmethod
-    @torch.jit.script
-    def decodeToken(token):
-        if MidiTokenizer.isNoteOnToken(token):
-            message_type = MidiMessage.NoteOn.value
+    if isNoteOnToken(token):
+        message_type = MidiMessage.NoteOn.value
 
-            channel, number, value = MidiTokenizer.decodeNoteOnToken(token)
-        elif MidiTokenizer.isNoteOffToken(token):
-            message_type = MidiMessage.NoteOff.value
+        channel, number, value = decodeNoteOnToken(token)
+    elif isNoteOffToken(token):
+        message_type = MidiMessage.NoteOff.value
 
-            channel, number, value = MidiTokenizer.decodeNoteOffToken(token)
-        elif MidiTokenizer.isProgramChangeToken(token):
-            message_type = MidiMessage.ProgramChange.value
+        channel, number, value = decodeNoteOffToken(token)
+    elif isProgramChangeToken(token):
+        message_type = MidiMessage.ProgramChange.value
 
-            channel, number = MidiTokenizer.decodeProgramChangeToken(token)
-            value = 0
-        elif MidiTokenizer.isControllerEventToken(token):
-            message_type = MidiMessage.ControllerEvent.value
+        value = 0
+        channel, number = decodeProgramChangeToken(token)
+    elif isControllerEventToken(token):
+        message_type = MidiMessage.ControllerEvent.value
 
-            channel, number, value = MidiTokenizer.decodeControllerEventToken(token)
-        else:
-            # TODO - token not supported, throw error
-            print()
+        channel, number, value = decodeControllerEventToken(token)
+    else:
+        # TODO - token not supported, throw error
+        pass
 
-        return message_type, channel, number, value
+    return message_type, channel, number, value
