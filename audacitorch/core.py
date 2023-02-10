@@ -216,10 +216,10 @@ class WaveformToMidiBase(AudacityModel):
 
   @staticmethod
   @abstractmethod
-  #@torch.jit.script
+  @torch.jit.script
   def notes_to_midi(notes):
 
-    midi = None
+    midi = torch.empty(0)
 
     onsets = notes[..., 0]
     offsets = notes[..., 1]
@@ -230,6 +230,6 @@ class WaveformToMidiBase(AudacityModel):
         offset = offsets[i]
         pitch = pitches[i]
 
-        msg = None
+        midi = torch.cat((midi, torch.tensor(encodeNoteOnToken(1, pitch.item(), 127)).unsqueeze(0)))
 
     return midi

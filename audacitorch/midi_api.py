@@ -15,7 +15,7 @@ class MidiMessage(Enum):
 """
 NOTE-ON
 """
-def encodeNoteOnToken(channel, noteNumber, velocity):
+def encodeNoteOnToken(channel : int, noteNumber : int, velocity : int):
     num_channels = 16
     num_notes = 128
     num_velocities = 128
@@ -67,7 +67,7 @@ def decodeNoteOnToken(token):
 """
 NOTE-OFF
 """
-def encodeNoteOffToken(channel, noteNumber, velocity):
+def encodeNoteOffToken(channel : int, noteNumber : int, velocity : int):
     num_channels = 16
     num_notes = 128
     num_velocities = 128
@@ -113,7 +113,7 @@ def decodeNoteOffToken(token):
 """
 PROGRAM-CHANGE
 """
-def encodeProgramChangeToken(channel, programNumber):
+def encodeProgramChangeToken(channel : int, programNumber : int):
     num_channels = 16
     num_programs = 128
 
@@ -163,7 +163,7 @@ def decodeProgramChangeToken(token):
 """
 CONTROLLER-EVENT
 """
-def encodeControllerEventToken(channel, controllerType, value):
+def encodeControllerEventToken(channel : int, controllerType : int, value : int):
     num_channels = 16
     num_controllers = 128
     num_values = 128
