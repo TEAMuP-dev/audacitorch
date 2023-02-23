@@ -230,6 +230,6 @@ class WaveformToMidiBase(AudacityModel):
         offset = offsets[i]
         pitch = pitches[i]
 
-        midi = torch.cat((midi, torch.tensor(encodeNoteOnToken(1, pitch.item(), 127)).unsqueeze(0)))
+        midi = torch.cat((midi, encode_note_on_token(1, pitch.item(), 127)))
 
     return midi

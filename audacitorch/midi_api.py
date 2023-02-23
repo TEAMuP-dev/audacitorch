@@ -1,237 +1,108 @@
-from enum import Enum
 import torch
 
 
 # See https://docs.juce.com/master/tutorial_midi_message.html
+# See https://www.cs.cmu.edu/~music/cmsip/readings/MIDI%20tutorial%20for%20programmers.html
 
 
-class MidiMessage(Enum):
-    NoteOn = 0
-    NoteOff = 1
-    ProgramChange = 2
-    ControllerEvent = 3
+def validate_channel(channel : int):
+    assert 1 <= channel <= 16
 
 
-"""
-NOTE-ON
-"""
-def encodeNoteOnToken(channel : int, noteNumber : int, velocity : int):
-    num_channels = 16
-    num_notes = 128
-    num_velocities = 128
+def validate_pitch(pitch : int):
+    assert 0 <= pitch <= 127
 
-    assert 1 <= channel <= num_channels
-    assert 0 <= noteNumber <= (num_notes - 1)
-    assert 0 <= velocity <= (num_velocities - 1)
 
-    token = velocity + noteNumber * num_velocities + (channel - 1) * num_notes * num_velocities
+def validate_velocity(velocity : int):
+    assert 0 <= velocity <= 127
 
-    return token
 
-def getMinNoteOnToken():
+def encode_note_on_token(channel : int, pitch : int, velocity : int):
+    validate_channel(channel)
+    validate_pitch(pitch)
+    validate_velocity(velocity)
 
-    minToken = 0
+    status_byte = (0b1001 << 4) + (channel - 1)
 
-    return minToken
+    midi_bytes = torch.ByteTensor([status_byte, pitch, velocity])
 
-def getMaxNoteOnToken():
-    num_channels = 16
-    num_notes = 128
-    num_velocities = 128
+    return midi_bytes
 
-    maxToken = num_channels * num_notes * num_velocities - 1
 
-    return maxToken
+def encode_note_off_token(channel : int, pitch : int, velocity : int):
+    validate_channel(channel)
+    validate_pitch(pitch)
+    validate_velocity(velocity)
 
-def isNoteOnToken(token):
+    status_byte = (0b1000 << 4) + (channel - 1)
 
-    isToken = getMinNoteOnToken() <= token <= getMaxNoteOnToken()
+    midi_bytes = torch.ByteTensor([status_byte, pitch, velocity])
 
-    return isToken
+    return midi_bytes
 
-def decodeNoteOnToken(token):
-    num_channels = 16
-    num_notes = 128
-    num_velocities = 128
 
-    assert isNoteOnToken(token)
+def encode_drum_note_on_token(drum_type : int, velocity : int):
+    midi_bytes = encode_note_on_token(10, drum_type, velocity)
 
-    channel = token // (num_notes * num_velocities)
-    noteNumber = (token - channel * num_notes * num_velocities) // num_velocities
-    velocity = token - channel * num_notes * num_velocities - noteNumber * num_velocities
+    return midi_bytes
 
-    channel += 1
 
-    return channel, noteNumber, velocity
+def encode_drum_note_off_token(drum_type : int, velocity : int):
+    midi_bytes = encode_note_off_token(10, drum_type, velocity)
 
-"""
-NOTE-OFF
-"""
-def encodeNoteOffToken(channel : int, noteNumber : int, velocity : int):
-    num_channels = 16
-    num_notes = 128
-    num_velocities = 128
+    return midi_bytes
 
-    assert 1 <= channel <= num_channels
-    assert 0 <= noteNumber <= (num_notes - 1)
-    assert 0 <= velocity <= (num_velocities - 1)
 
-    token = getMaxNoteOnToken() + 1
-    token += velocity + noteNumber * num_velocities + (channel - 1) * num_notes * num_velocities
+def validate_instrument(instrument : int):
+    assert 1 <= instrument <= 128
 
-    return token
 
-def getMinNoteOffToken():
+def encode_program_change_token(channel : int, instrument : int):
+    validate_channel(channel)
+    validate_instrument(instrument)
 
-    minToken = getMaxNoteOnToken() + 1
+    status_byte = (0b1100 << 4) + (channel - 1)
 
-    return minToken
+    midi_bytes = torch.ByteTensor([status_byte, instrument - 1])
 
-def getMaxNoteOffToken():
-    num_channels = 16
-    num_notes = 128
-    num_velocities = 128
+    return midi_bytes
 
-    maxToken = getMinNoteOffToken() + num_channels * num_notes * num_velocities - 1
 
-    return maxToken
+def validate_controller_type(controller_type : int):
+    assert 0 <= controller_type <= 127
 
-def isNoteOffToken(token):
 
-    isToken = getMinNoteOffToken() <= token <= getMaxNoteOffToken()
+def validate_value(value : int):
+    assert 0 <= value <= 127
 
-    return isToken
 
-def decodeNoteOffToken(token):
+def encode_controller_event_token(channel : int, controller_type : int, value : int):
+    validate_channel(channel)
+    validate_controller_type(controller_type)
+    validate_value(value)
 
-    assert isNoteOffToken(token)
+    status_byte = (0b1011 << 4) + (channel - 1)
 
-    channel, noteNumber, velocity = decodeNoteOnToken(token - getMinNoteOffToken())
+    midi_bytes = torch.ByteTensor([status_byte, controller_type, value])
 
-    return channel, noteNumber, velocity
+    return midi_bytes
 
-"""
-PROGRAM-CHANGE
-"""
-def encodeProgramChangeToken(channel : int, programNumber : int):
-    num_channels = 16
-    num_programs = 128
 
-    assert 1 <= channel <= num_channels
-    assert 0 <= programNumber <= (num_programs - 1)
+def validate_bend_amt(bend_amt : int):
+    assert -1. <= bend_amt <= 1.
 
-    token = getMaxNoteOffToken() + 1
-    token += programNumber + (channel - 1) * num_programs
 
-    return token
+def encode_pitch_bend_token(channel : int, bend_amt : float):
+    validate_channel(channel)
+    validate_bend_amt(bend_amt)
 
-def getMinProgramChangeToken():
+    status_byte = (0b1110 << 4) + (channel - 1)
 
-    minToken = getMaxNoteOffToken() + 1
+    bend_value = round((2 ** 14) * (2 / (bend_amt + 1)))
 
-    return minToken
+    msb = bend_value >> 7
+    lsb = bend_value - msb
 
-def getMaxProgramChangeToken():
-    num_channels = 16
-    num_programs = 128
+    midi_bytes = torch.ByteTensor([status_byte, lsb, msb])
 
-    maxToken = getMinProgramChangeToken() + num_channels * num_programs - 1
-
-    return maxToken
-
-def isProgramChangeToken(token):
-
-    isToken = getMinProgramChangeToken() <= token <= getMaxProgramChangeToken()
-
-    return isToken
-
-def decodeProgramChangeToken(token):
-    num_channels = 16
-    num_programs = 128
-
-    assert isProgramChangeToken(token)
-
-    relative_token = token - getMinProgramChangeToken()
-
-    channel = relative_token // num_programs
-    programNumber = relative_token - channel * num_programs
-
-    channel += 1
-
-    return channel, programNumber
-
-"""
-CONTROLLER-EVENT
-"""
-def encodeControllerEventToken(channel : int, controllerType : int, value : int):
-    num_channels = 16
-    num_controllers = 128
-    num_values = 128
-
-    assert 1 <= channel <= num_channels
-    assert 0 <= controllerType <= (num_controllers - 1)
-    assert 0 <= value <= (num_values - 1)
-
-    token = getMaxProgramChangeToken() + 1
-    token += value + controllerType * num_values + (channel - 1) * num_controllers * num_values
-
-    return token
-
-def getMinControllerEventToken():
-
-    minToken = getMaxProgramChangeToken() + 1
-
-    return minToken
-
-def getMaxControllerEventToken():
-    num_channels = 16
-    num_controllers = 128
-    num_values = 128
-
-    maxToken = getMinControllerEventToken() + num_channels * num_controllers * num_values - 1
-
-    return maxToken
-
-def isControllerEventToken(token):
-
-    isToken = getMinControllerEventToken() <= token <= getMaxControllerEventToken()
-
-    return isToken
-
-def decodeControllerEventToken(token):
-
-    assert isControllerEventToken(token)
-
-    channel, controllerType, value = decodeNoteOnToken(token - getMinControllerEventToken())
-
-    return channel, controllerType, value
-
-"""
-DE-TOKENIZE
-"""
-@staticmethod
-@torch.jit.script
-def decodeToken(token):
-    message_type, channel, number, value = -1, -1, -1, -1
-
-    if isNoteOnToken(token):
-        message_type = MidiMessage.NoteOn.value
-
-        channel, number, value = decodeNoteOnToken(token)
-    elif isNoteOffToken(token):
-        message_type = MidiMessage.NoteOff.value
-
-        channel, number, value = decodeNoteOffToken(token)
-    elif isProgramChangeToken(token):
-        message_type = MidiMessage.ProgramChange.value
-
-        channel, number = decodeProgramChangeToken(token)
-    elif isControllerEventToken(token):
-        message_type = MidiMessage.ControllerEvent.value
-
-        channel, number, value = decodeControllerEventToken(token)
-    else:
-        # TODO - token not supported, throw error
-        pass
-
-    return message_type, channel, number, value
+    return midi_bytes
