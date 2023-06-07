@@ -78,6 +78,34 @@ If your model uses a spectrogram as input/output, you'll need to wrap your forwa
 
 <a name="metadata"/>
 
+## Scripting a Model
+
+Once you have chosen the appropriate class type for your model from the provided audacitorch Deep Learning Effect and the Deep Learning Analyzer classes, you will need to create a model file for use in Audacity. This model file allows a trained model to be executed in Audacity.
+
+There are several methods available to create a file for an executable deep learning model. The purpose of serializing the model into a file is to enable our C++ code to execute your model. To serialize a model, our framework utilizes files generated from TorchScript. An important note is that TorchScript does not facilitate model training. When investigating TorchScript, you may also come across the term LibTorch, which is a PyTorch C++ API. LibTorch contains the core components of PyTorch, allowing TorchScript files to be executed in C++. However, you do not need to interact directly with LibTorch to serialize your model.
+
+TorchScript enables the serialization of PyTorch code and is included with the PyTorch module - no additional modules are required. Currently, the deep learning tools for Audacity do not support models running on the GPU. [More information on TorchScript can be found in the PyTorch documentation](https://pytorch.org/docs/stable/jit.html).
+
+TorchScript features a JIT module, where JIT stands for Just-In-Time Compiler. The TorchScript JIT analyzes PyTorch code and translates it into TorchScript. There are two methods for converting PyTorch code into TorchScript:
+
+- Tracing: torch.jit.trace constructs the computational graph of your model by tracing the path of sample inputs through your model.
+
+- Scripting: This method parses the PyTorch code to compile a graph for TorchScript. Scripting is a more robust method for generating a TorchScript version of your model, as tracing can overlook certain logic embedded in the Python code of your model.
+
+These two approaches can be combined, with [more information available in the TorchScript documentation](https://pytorch.org/docs/stable/jit.html#mixing-tracing-and-scripting). We recommend using TorchScript scripting whenever possible for more robust model serialization.
+
+Serializing a model can be a challenging task with many unique edge cases. To help you navigate this process, we have provided several examples:
+
+- [Demucs Denoiser](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.ipynb): In this example, we guide you through implementing the `do_forward_pass` method of the `WaveformToWaveformBase` class, serializing the Demucs denoiser using the TorchScript scripting method, creating the model metadata (covered in the section below), and uploading to Huggingface. We illustrate how, in some instances, you may need to modify the original model code to properly serialize the model, this is done in the [notebooks/denoiser/denoiser.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.py) file. The model's source code is included for your reference.
+
+- [FCNF0 ++ Pitch Estimation](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.ipynb): In this case, we guide you through implementing the `get_timestamps` & `do_forward_pass` methods of the `WaveformToLabelsBase` class, serializing the FCNF0 ++ Pitch Estimator using the TorchScript scripting method, and creating the model metadata. The model's source code is also provided for your reference located in the file [notebooks/pitch/pitch.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.py).
+
+- [Asteroid Source Separation Model](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/example.ipynb): For this example, we download a pretrained model from the Asteroid Python module, create metadata for the model, inherit from the `WaveformToWaveformBase` class, show you how to trace the model with dummy inputs, and demonstrate how to script the model.
+
+- [S2T-MEDIUM-LIBRISPEECH-ASR by Changhan Wang and Yun Tang and Xutai Ma and Anne Wu and Dmytro Okhonko and Juan Pino](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/labeler-example.ipynb): In this last example, we guide you through the process of wrapping a language model in the `WaveformToLabelsBase` class, creating model metadata, and tracing this model since scripting is not feasible in this case.
+
+
+
 ## Model Metadata
 
 Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. See [here](#creating-metadata) for an example metadata dictionary. 
