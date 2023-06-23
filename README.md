@@ -33,7 +33,7 @@ Our work has not yet been merged to the main build of Audacity, though it will b
 You can install `audacitorch` using pip: 
 
 ```
-pip install -e "git+https://github.com/hugofloresgarcia/audacitorch.git#egg=audacitorch"
+pip install audacitorch
 ```
 
 <a name="contrib"/>
@@ -108,7 +108,7 @@ Serializing a model can be a challenging task with many unique edge cases. To he
 
 ## Model Metadata
 
-Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. See [here](#creating-metadata) for an example metadata dictionary. 
+Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. Note that you do not need to manually create a metadata file, we provide utility function to automatically create and test metadata files from a Python dictionary. For an example of creating a metadata file from a Python dictionary, see [here](#creating-metadata). 
 
 #### Metadata Spec
 
@@ -285,29 +285,33 @@ save_model(serialized_model, metadata, root)
 <a name="exporting"/>
 
 ### Exporting to HuggingFace
+At this point, your directory structure should look like this:
 
-You should now have a directory structure that looks like this: 
-
-```
+```bash
 /booster-net/
 /booster-net/model.pt
 /booster-net/metadata.json
 ```
+This will become the HuggingFace repository for your Audacity model.
 
-This will be the repository for your audacity model. Make sure to add a readme with the `audacity` tag in the YAML metadata, so it show up on the explore tab of Audacity's Deep Learning Tools. 
+Inside your HuggingFace repository, make sure to create a `README.md` file. After doing this, your directory structure should now look like:
 
-Create a `README.md` inside `booster-net/`, and add the following header:
-
-
-in README.md
+```bash
+/booster-net/
+/booster-net/model.pt
+/booster-net/metadata.json
+/booster-net/README.md
 ```
+
+In your HuggingFace repository's `README.md` file, you'll need to add an audacity tag in the YAML metadata. This ensures that your model will appear under the "Explore" tab in Audacity's Deep Learning Tools. To add the audacity tag, insert the following lines at the top of your README.md file:
+```yaml
 ---
 tags:
 - audacity
 ---
 ```
 
-Awesome! It's time to push to HuggingFace. See their [documentation](https://huggingface.co/docs/hub/adding-a-model) for adding a model to the HuggingFace model hub. 
+Great job! Now it's time to push your changes to HuggingFace. For more information on adding a model to the HuggingFace model hub, check out their documentation.
 
 <a name="debugging"/>
 
