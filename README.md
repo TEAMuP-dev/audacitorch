@@ -131,6 +131,11 @@ required fields:
     -  If `multichannel` is set to `true`, stereo tracks are passed to the model as multichannel audio tensors, with shape `(2, n)`. Note that this means that the input could either be a mono track with shape `(1, n)` or stereo track with shape `(2, n)`.
     -  If `multichannel` is set to `false`, stereo tracks are downmixed, meaning that the input audio tensor will always be shape `(1, n)`.
 
+optional fields:
+- `displayname` (`str`)
+    - max 60 chars
+    - an optional display name for users to see when downloading models, if no displayname is given the model name will default to that of the model repo name. 
+
 ---
 
 <a name="builtin"/>
