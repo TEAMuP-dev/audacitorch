@@ -14,7 +14,7 @@ This package contains utilities for prepping PyTorch audio models for use in Aud
 - [Debugging Your Model in Audacity](#debugging)
 - [Example - Waveform-to-Waveform](#example-wav2wav)
     - [Making sure your model is compatible with `torchscript`](#compat)
-- [Example - Exporting a Pretrained Asteroid Model](#example-asteroid)
+- [Examples](#examples)
 
 --- 
 
@@ -94,17 +94,7 @@ TorchScript features a JIT module, where JIT stands for Just-In-Time Compiler. T
 
 These two approaches can be combined, with [more information available in the TorchScript documentation](https://pytorch.org/docs/stable/jit.html#mixing-tracing-and-scripting). We recommend using TorchScript scripting whenever possible for more robust model serialization.
 
-Serializing a model can be a challenging task with many unique edge cases. To help you navigate this process, we have provided several examples:
-
-- [Demucs Denoiser](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.ipynb): In this example, we guide you through implementing the `do_forward_pass` method of the `WaveformToWaveformBase` class, serializing the Demucs denoiser using the TorchScript scripting method, creating the model metadata (covered in the section below), and uploading to Huggingface. We illustrate how, in some instances, you may need to modify the original model code to properly serialize the model, this is done in the [notebooks/denoiser/denoiser.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.py) file. The model's source code is included for your reference.
-
-- [FCNF0 ++ Pitch Estimation](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.ipynb): In this case, we guide you through implementing the `get_timestamps` & `do_forward_pass` methods of the `WaveformToLabelsBase` class, serializing the FCNF0 ++ Pitch Estimator using the TorchScript scripting method, and creating the model metadata. The model's source code is also provided for your reference located in the file [notebooks/pitch/pitch.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.py).
-
-- [Asteroid Source Separation Model](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/example.ipynb): For this example, we download a pretrained model from the Asteroid Python module, create metadata for the model, inherit from the `WaveformToWaveformBase` class, show you how to trace the model with dummy inputs, and demonstrate how to script the model.
-
-- [S2T-MEDIUM-LIBRISPEECH-ASR by Changhan Wang and Yun Tang and Xutai Ma and Anne Wu and Dmytro Okhonko and Juan Pino](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/labeler-example.ipynb): In this last example, we guide you through the process of wrapping a language model in the `WaveformToLabelsBase` class, creating model metadata, and tracing this model since scripting is not feasible in this case.
-
-
+Serializing a model can be a challenging task with many unique edge cases. To help you navigate this process, we have provided several [examples](#examples).
 
 ## Model Metadata
 
@@ -326,15 +316,15 @@ If your model fails internally while processing audio, you may see something lik
 To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
 
 
-<a name="example-asteroid"/>
+<a name="examples"/>
 
-## Example - Exporting a Pretrained [Asteroid](https://github.com/asteroid-team/asteroid) model
+## Examples
 
-See this [example notebook](notebooks/example.ipynb), where we serialize a pretrained ConvTasNet model for speech separation using the [Asteroid](https://github.com/asteroid-team/asteroid) source separation library.
+- [Demucs Denoiser](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.ipynb): In this example, we guide you through implementing the `do_forward_pass` method of the `WaveformToWaveformBase` class, serializing the Demucs denoiser using the TorchScript scripting method, creating the model metadata (covered in the section below), and uploading to Huggingface. We illustrate how, in some instances, you may need to modify the original model code to properly serialize the model, this is done in the [notebooks/denoiser/denoiser.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.py) file. The model's source code is included for your reference.
 
+- [FCNF0 ++ Pitch Estimation](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.ipynb): In this case, we guide you through implementing the `get_timestamps` & `do_forward_pass` methods of the `WaveformToLabelsBase` class, serializing the FCNF0 ++ Pitch Estimator using the TorchScript scripting method, and creating the model metadata. The model's source code is also provided for your reference located in the file [notebooks/pitch/pitch.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.py).
 
-## Example - Exporting a Pretrained [S2T](https://huggingface.co/facebook/s2t-medium-librispeech-asr) model
+- [Asteroid Source Separation Model](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/example.ipynb): For this example, we download a pretrained model from the Asteroid Python module, create metadata for the model, inherit from the `WaveformToWaveformBase` class, show you how to trace the model with dummy inputs, and demonstrate how to script the model.
 
-See this [example notebook](notebooks/labeler-example.ipynb), where we serialize a pretrained speech to text transformer from Facebook.
-
+- [S2T-MEDIUM-LIBRISPEECH-ASR by Changhan Wang and Yun Tang and Xutai Ma and Anne Wu and Dmytro Okhonko and Juan Pino](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/labeler-example.ipynb): In this last example, we guide you through the process of wrapping a language model in the `WaveformToLabelsBase` class, creating model metadata, and tracing this model since scripting is not feasible in this case.
 ---
