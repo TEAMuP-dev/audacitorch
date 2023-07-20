@@ -13,7 +13,7 @@ setup(
     author_email='hf01049@georgiasouthern.edu',
     url='https://github.com/hugofloresgarcia/audacitorch',
     install_requires=[
-        'torch==1.9.0',
+        'torch',
         'jsonschema'
     ],
     packages=['audacitorch'],
