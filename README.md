@@ -42,7 +42,7 @@ pip install audacitorch
 
 ### Supported Torch versions
 
-`audacitorch` requires for your model to be able to run in **Torch 1.9.0**, as that's what the Audacity torchscript interpreter uses. 
+`audacitorch` requires for your model to be able to run in **Torch 2.0**, as that's what the Audacity torchscript interpreter uses. 
 
 ### Deep Learning Effect and Analyzer
 
