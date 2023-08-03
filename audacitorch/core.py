@@ -123,6 +123,7 @@ class WaveformToWaveformBase(AudacityModel):
             `(1, n_samples)`, as all incoming audio will be downmixed first. 
             Otherwise, expect `x` to be a multichannel waveform tensor with 
             shape `(n_channels, n_samples)`.
+        params : A tensor of UI parameters to use for the forward pass. Optional. 
 
     Returns:
         torch.Tensor: Output tensor, shape (n_sources, n_samples). Each source 

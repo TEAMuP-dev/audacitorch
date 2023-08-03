@@ -1,6 +1,8 @@
 # audacitorch
 
-This package contains utilities for prepping PyTorch audio models for use in Audacity. More specifically, it provides abstract classes for you to wrap your waveform-to-waveform and waveform-to-labels models (see the [Deep Learning for Audacity](https://interactiveaudiolab.github.io/project/audacity) website to learn more about deep learning models for audacity).   
+This package contains utilities for prepping PyTorch audio models for use with the tensorjuce framework.
+
+More specifically, it provides abstract classes for you to wrap your waveform-to-waveform.   
 
 ## Table of Contents
 - [Downloading Audacity with Deep Learning](#download)
@@ -38,43 +40,15 @@ pip install audacitorch
 
 <a name="contrib"/>
 
-## Contributing Models to Audacity
+## Contributing Models  
 
-### Supported Torch versions
-
-`audacitorch` requires for your model to be able to run in **Torch 1.9.0**, as that's what the Audacity torchscript interpreter uses. 
-
-### Deep Learning Effect and Analyzer
-
-Audacity is equipped with a wrapper framework for deep learning models written in PyTorch. Audacity contains two deep learning tools: `Deep Learning Effect` and `Deep Learning Analyzer`.  
-`Deep Learning Effect` performs waveform to waveform processing, and is useful for audio-in-audio-out tasks (such as source separation, voice conversion, style transfer, amplifier emulation, etc.), while `Deep Learning Analyzer` performs waveform to labels processing, and is useful for annotation tasks (such as sound event detection, musical instrument recognition, automatic speech recognition, etc.).
-`audacitorch` contains two abstract classes for serializing two types of models: waveform-to-waveform and waveform-to-labels. The classes are `WaveformToWaveformBase`, and `WaveformToLabelsBase`, respectively. 
-
-<a name="effect-types"/> 
-
-## Choosing an Effect Type 
-
-<a name="effect-diagram"/> 
-
-![](./assets/tensor-flow.png)
-
-<a name="wav2wav"/> 
 
 ### Waveform to Waveform models
 
-As shown in the [effect diagram](#effect-diagram), Waveform-to-waveform models receive a single multichannel audio track as input, and may write to a variable number of new audio tracks as output.
+Waveform-to-waveform models receive a single multichannel audio track as input, and may write to a variable number of new audio tracks as output.
 
 Example models for waveform-to-waveform effects include source separation, neural upsampling, guitar amplifier emulation, generative models, etc. Output tensors for waveform-to-waveform models must be multichannel waveform tensors with shape `(num_output_channels, num_samples)`. For every audio waveform in the output tensor, a new audio track is created in the Audacity project. 
 
-<a name="wav2labels"/> 
-
-### Waveform to Labels models
-
-As shown in the [effect diagram](#effect-diagram), Waveform-to-labels models receive a single multichannel audio track as input, and may write to an output label track as output. The waveform-to-labels effect can be used for many audio analysis applications, such as voice activity detection, sound event detection, musical instrument recognition, automatic speech recognition, etc. The output for waveform-to-labels models must be a tuple of two tensors. The first tensor corresponds to the class indexes for each label present in the waveform, shape `(num_timesteps,)`. The second tensor must contain timestamps with start and stop times for each label, shape `(num_timesteps, 2)`.  
-
-### What If My Model Uses a Spectrogram as Input/Output?
-
-If your model uses a spectrogram as input/output, you'll need to wrap your forward pass with some torchscript-compatible preprocessing/postprocessing. We recommend using [torchaudio](https://pytorch.org/audio/stable/index.html), writing your own preprocessing transforms in their own `nn.Module`, or writing your PyTorch-only preprocessing and placing it in `WaveformToWaveform.do_forward_pass` or `WaveformToLabels.do_forward_pass`. See the [compatibility](#compat) section for more info.  
 
 <a name="metadata"/>
 
@@ -98,7 +72,7 @@ Serializing a model can be a challenging task with many unique edge cases. To he
 
 ## Model Metadata
 
-Certain details about the model, such as its sample rate, tool type (e.g. waveform-to-waveform or waveform-to-labels), list of labels, etc. must be provided by the model contributor in a separate `metadata.json` file. In order to help users choose the correct model for their required task, model contributors are asked to provide a short and long description of the model, the target domain of the model (e.g. speech, music, environmental, etc.), as well as a list of tags or keywords as part of the metadata. Note that you do not need to manually create a metadata file, we provide utility function to automatically create and test metadata files from a Python dictionary. For an example of creating a metadata file from a Python dictionary, see [here](#creating-metadata). 
+Certain details about the model, such as its sample rate, etc. must be provided by the model contributor. In order to help users choose the correct model for their required task, model contributors are asked to provide a short description of the model, among some other fields. 
 
 #### Metadata Spec
 
@@ -143,7 +117,7 @@ By default, users have to click on the `Add From HuggingFace` button on the Auda
 
 ## Example - Waveform-to-Waveform model
 
-Here's a minimal example for a model that simply boosts volume by multiplying the incoming audio by a factor of 2. 
+Here's a minimal example for a model that simply boosts volume by multiplying the incoming audio by a given gain factor, passed. 
 
 We can sum up the whole process into 4 steps:
 
@@ -156,7 +130,7 @@ We can sum up the whole process into 4 steps:
 
 ### Developing your model
 
-First, we create our model. There are no internal constraints on what the internal model architecture should be, as long as you can use `torch.jit.script` or `torch.jit.trace` to serialize it, and it is able to meet the input-output constraints specified in waveform-to-waveform and waveform-to-labels models. 
+First, we create our model. There are no internal constraints on what the internal model architecture should be, as long as you can use `torch.jit.script` or `torch.jit.trace` to serialize it, and it is able to meet the input-output constraints specified in waveform-to-waveform models. 
 
 ```python
 import torch
@@ -164,9 +138,9 @@ import torch.nn as nn
 
 class MyVolumeModel(nn.Module):
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, gain: torch.Tensor) -> torch.Tensor:
         # do the neural net magic!
-        x = x * 2
+        x = x * gain
 
         return x
 ```
@@ -188,19 +162,19 @@ Useful links:
 
 ### Wrapping your model using `audacitorch`
 
-Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. For both `WaveformToWaveformBase` and `WaveformToLabelsBase`, we need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/audacitorch/core.py) for more details. 
+Now, we create a wrapper class for our model. Because our model returns an audio waveform as output, we'll use `WaveformToWaveformBase` as our parent class. We need to implement the `do_forward_pass` method with our processing code. See the [docstrings](/audacitorch/core.py) for more details. 
 
 ```python
 from audacitorch import WaveformToWaveformBase
 
 class MyVolumeModelWrapper(WaveformToWaveformBase):
     
-    def do_forward_pass(self, x: torch.Tensor) -> torch.Tensor:
+    def do_forward_pass(self, x: torch.Tensor, gain: Optional[torch.Tensor] = None) -> torch.Tensor:
         
         # do any preprocessing here! 
         # expect x to be a waveform tensor with shape (n_channels, n_samples)
 
-        output = self.model(x)
+        output = self.model(x, params)
 
         # do any postprocessing here!
         # the return value should be a multichannel waveform tensor with shape (n_channels, n_samples)
@@ -212,14 +186,16 @@ class MyVolumeModelWrapper(WaveformToWaveformBase):
 
 ### Creating a metadata document
 
-Audacity models need a metadata file. See the metadata [spec](#metadata-spec) to learn about the required fields. 
+Audacity models need a metadata file. 
+You'll have to create a dictionary that looks like this:
 
 ```python
 metadata = {
+    'name': 'Volume Booster',
+    'author': 'Hugo Flores Garcia',
     'sample_rate': 48000, 
     'domain_tags': ['music', 'speech', 'environmental'],
-    'short_description': 'Use me to boost volume by 3dB :).',
-    'long_description':  'This description can be a max of 280 characters aaaaaaaaaaaaaaaaaaaa.',
+    'description': 'Use me to boost volume by 3dB.',
     'tags': ['volume boost'],
     'labels': ['boosted'],
     'effect_type': 'waveform-to-waveform',
@@ -232,8 +208,7 @@ All set! We can now proceed to serialize the model to torchscript and save the m
 
 ```python
 from pathlib import Path
-from audacitorch.utils import save_model, validate_metadata, \
-                              get_example_inputs, test_run
+from audacitorch.utils import get_example_inputs
 
 # create a root dir for our model
 root = Path('booster-net')
@@ -241,90 +216,23 @@ root.mkdir(exist_ok=True, parents=True)
 
 # get our model
 model = MyVolumeModel()
+print(f"created model: {model}")
 
-# wrap it
-wrapper = MyVolumeModelWrapper(model)
-
-# serialize it using torch.jit.script, torch.jit.trace,
-# or a combination of both. 
-
-# option 1: torch.jit.script 
-# using torch.jit.script is preferred for most cases, 
-# but may require changing a lot of source code
-serialized_model = torch.jit.script(wrapper)
-
-# option 2: torch.jit.trace
-# using torch.jit.trace is typically easier, but you
-# need to be extra careful that your serialized model behaves 
-# properly after tracing
-example_inputs = get_example_inputs()
-serialized_model = torch.jit.trace(wrapper, example_inputs[0], 
-                                    check_inputs=example_inputs)
+# wrap the model in the AudacityModel wrapper, which will handle all the metadata and jit.scripting
+serialized_model = MyVolumeModelWrapper(model, metadata)
+print(f"serialized model: {serialized_model}")
 
 # take your model for a test run!
-test_run(serialized_model)
+audio = get_example_inputs(multichannel=False)[0]
+print(f"input audio: {audio}")
 
-# check that we created our metadata correctly
-success, msg = validate_metadata(metadata)
-assert success
+gain = torch.tensor(3.0)
+output = serialized_model(audio, gain)
+print(f"output audio: {output}")
 
 # save!
-save_model(serialized_model, metadata, root)
+torch.jit.save(serialized_model, root / 'volumizer.pt')
 ```
 
-<a name="exporting"/>
+You can now load `volumizer.pt` in the plugin! 
 
-### Exporting to HuggingFace
-At this point, your directory structure should look like this:
-
-```bash
-/booster-net/
-/booster-net/model.pt
-/booster-net/metadata.json
-```
-This will become the HuggingFace repository for your Audacity model.
-
-Inside your HuggingFace repository, make sure to create a `README.md` file. After doing this, your directory structure should now look like:
-
-```bash
-/booster-net/
-/booster-net/model.pt
-/booster-net/metadata.json
-/booster-net/README.md
-```
-
-In your HuggingFace repository's `README.md` file, you'll need to add an audacity tag in the YAML metadata. This ensures that your model will appear under the "Explore" tab in Audacity's Deep Learning Tools. To add the audacity tag, insert the following lines at the top of your README.md file:
-```yaml
----
-tags:
-- audacity
----
-```
-
-Great job! Now it's time to push your changes to HuggingFace. For more information on adding a model to the HuggingFace model hub, check out their documentation.
-
-<a name="debugging"/>
-
-## Debugging Your Model in Audacity
-
-After serializing, you may need to debug your model inside Audacity, to make sure that it handles inputs correctly, doesn't crash while processing, and produces the correct output. 
-While debugging, make sure your model isn't available through other users through the `Explore HuggingFace` button by temporarily removing the `audacity` tag from your README file.
-If your model fails internally while processing audio, you may see something like this:
-
-<img src="/assets/error.png" width=300>
-
-To debug, you can access the error logs through the Help menu, in `Help->Diagnostics->Show Log...`. Any torchscript errors that may occur during the forward pass will be redirected here. 
-
-
-<a name="examples"/>
-
-## Examples
-
-- [Demucs Denoiser](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.ipynb): In this example, we guide you through implementing the `do_forward_pass` method of the `WaveformToWaveformBase` class, serializing the Demucs denoiser using the TorchScript scripting method, creating the model metadata (covered in the section below), and uploading to Huggingface. We illustrate how, in some instances, you may need to modify the original model code to properly serialize the model, this is done in the [notebooks/denoiser/denoiser.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/denoiser/denoiser.py) file. The model's source code is included for your reference.
-
-- [FCNF0 ++ Pitch Estimation](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.ipynb): In this case, we guide you through implementing the `get_timestamps` & `do_forward_pass` methods of the `WaveformToLabelsBase` class, serializing the FCNF0 ++ Pitch Estimator using the TorchScript scripting method, and creating the model metadata. The model's source code is also provided for your reference located in the file [notebooks/pitch/pitch.py](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/pitch/pitch.py).
-
-- [Asteroid Source Separation Model](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/example.ipynb): For this example, we download a pretrained model from the Asteroid Python module, create metadata for the model, inherit from the `WaveformToWaveformBase` class, show you how to trace the model with dummy inputs, and demonstrate how to script the model.
-
-- [S2T-MEDIUM-LIBRISPEECH-ASR by Changhan Wang and Yun Tang and Xutai Ma and Anne Wu and Dmytro Okhonko and Juan Pino](https://github.com/audacitorch/audacitorch/blob/torchscript/notebooks/labeler-example.ipynb): In this last example, we guide you through the process of wrapping a language model in the `WaveformToLabelsBase` class, creating model metadata, and tracing this model since scripting is not feasible in this case.
----
