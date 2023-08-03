@@ -1,14 +1,14 @@
 from pathlib import Path
 import random
 from typing import Tuple
-from audacitorch import AudacityModel
+from audacitorch import TensorJuceModel
 
 import torch
 import json
 
 def get_example_inputs(multichannel: bool = False):
   """
-  returns a list of possible input tensors for an AudacityModel. 
+  returns a list of possible input tensors for an TensorJuceModel. 
 
   Possible inputs are audio tensors with shape (n_channels, n_samples). 
   If multichannel == False, n_channels will always be 1. 

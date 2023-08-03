@@ -218,7 +218,7 @@ root.mkdir(exist_ok=True, parents=True)
 model = MyVolumeModel()
 print(f"created model: {model}")
 
-# wrap the model in the AudacityModel wrapper, which will handle all the metadata and jit.scripting
+# wrap the model in the TensorJuceModel wrapper, which will handle all the metadata and jit.scripting
 serialized_model = MyVolumeModelWrapper(model, metadata)
 print(f"serialized model: {serialized_model}")
 

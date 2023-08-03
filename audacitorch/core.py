@@ -1,6 +1,7 @@
 from typing import Tuple, List, Optional, Type, Any, Dict
 import torch
 from torch import nn
+from torchaudio.functional import resample
 
 def _waveform_check(x: torch.Tensor):
   assert x.ndim == 2, "input must have two dimensions (channels, samples)"
@@ -44,7 +45,7 @@ def get_dict_types(d: Dict[Any, Any]) -> Tuple[Type, Type]:
     return Dict[key_type, value_type]
 
 
-class AudacityModel(torch.jit.ScriptModule):
+class TensorJuceModel(torch.jit.ScriptModule):
   sample_rate: int
   name: str
   author: str
@@ -98,7 +99,7 @@ class AudacityModel(torch.jit.ScriptModule):
       setattr(self, attr_key, torch.jit.Attribute(attr_val, attr_type)) 
     
 
-class WaveformToWaveformBase(AudacityModel):
+class WaveformToWaveformBase(TensorJuceModel):
 
   def forward(self, x: torch.Tensor, params: Optional[torch.Tensor] = None) -> torch.Tensor:
     """ 
@@ -131,7 +132,11 @@ class WaveformToWaveformBase(AudacityModel):
     """
     raise NotImplementedError("implement me!")
 
-class WaveformToLabelsBase(AudacityModel):
+  @torch.jit.export
+  def resample(self, x: torch.Tensor, sample_rate_in: int):
+    return resample(x, sample_rate_in, self.sample_rate)
+
+class WaveformToLabelsBase(TensorJuceModel):
 
   def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     """ 
