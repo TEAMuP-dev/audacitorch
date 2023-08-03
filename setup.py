@@ -8,13 +8,12 @@ with open('README.md') as file:
 setup(
     name='audacitorch',
     description='',
-    version='0.0.1',
+    version='0.1.0',
     author='Hugo Flores Garcia',
     author_email='hf01049@georgiasouthern.edu',
     url='https://github.com/hugofloresgarcia/audacitorch',
     install_requires=[
         'torch==1.9.0',
-        'jsonschema'
     ],
     packages=['audacitorch'],
     package_data={'audacitorch': ['assets/*']},
