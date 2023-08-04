@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from typing import Optional 
+from typing import Optional, Dict, Any
 
 class MyVolumeModel(nn.Module):
 
@@ -10,24 +10,22 @@ class MyVolumeModel(nn.Module):
 
         return x
 
-from audacitorch import ModelCard, WaveformToWaveformBase, ContinuousParameter
+from audacitorch import ModelCard, WaveformToWaveformBase, ContinuousCtrl
 
 class MyVolumeModelWrapper(WaveformToWaveformBase):
+    
+    def do_forward_pass(self, 
+            x: torch.Tensor, 
+            params: Dict[str, torch.Tensor]
+        ) -> torch.Tensor:
 
-    @torch.jit.export
-    def forward(self, *args, **kwargs):
-        return super().forward(*args, **kwargs)
-    
-    @torch.jit.export
-    def resample(self, *args,  **kwargs):
-        return super().resample(*args, **kwargs)
-    
-    def do_forward_pass(self, x: torch.Tensor, params: Optional[torch.Tensor] = None) -> torch.Tensor:
-        
         # do any preprocessing here! 
         # expect x to be a waveform tensor with shape (n_channels, n_samples)
 
-        output = self.model(x, params)
+        # we assume the user has modified the gain at this point
+        output = self.model(
+            x, gain=torch.tensor(params['gain'])
+        )
 
         # do any postprocessing here!
         # the return value should be a multichannel waveform tensor with shape (n_channels, n_samples)
@@ -43,15 +41,6 @@ model_card = ModelCard(
     sample_rate=44100
 )
 
-# create a continuous parameter for our model
-gain_ctrl = ContinuousParameter(
-    name="gain",
-    default=1.0,
-    min=0.0,
-    max=10.0,
-)
-
-
 from pathlib import Path
 from audacitorch.utils import get_example_inputs
 
@@ -63,8 +52,17 @@ root.mkdir(exist_ok=True, parents=True)
 model = MyVolumeModel()
 print(f"created model: {model}")
 
+ctrls = {
+    "gain" : ContinuousCtrl(
+        name="gain",
+        default=1.0,
+        min=0.0,
+        max=10.0, 
+    )
+}
+
 # wrap the model in the TensorJuceModel wrapper, which will handle all the metadata and jit.scripting
-serialized_model = MyVolumeModelWrapper(model, model_card, [gain_ctrl])
+serialized_model = torch.jit.script(MyVolumeModelWrapper(model, model_card, ctrls))
 print(f"serialized model: {serialized_model}")
 
 # take your model for a test run!
@@ -75,8 +73,8 @@ print(f"input audio: {audio}")
 # resample the audio to the model's sample rate
 audio = serialized_model.resample(audio, sample_rate_in)
 
-gain = torch.tensor(3.0)
-output = serialized_model(audio, gain)
+
+output = serialized_model(audio, {"gain": torch.tensor(3.0)})
 print(f"output audio: {output}")
 
 # save!
@@ -90,5 +88,5 @@ print(f"model card: {loaded_model.model_card}")
 print(f"ctrls: {loaded_model.ctrls}")
 
 breakpoint()
-loaded_output = loaded_model(audio, gain)
+loaded_output = loaded_model(audio, {"gain": torch.tensor(3.0)})
 assert torch.allclose(output, loaded_output)

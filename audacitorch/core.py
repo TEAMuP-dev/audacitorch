@@ -13,12 +13,21 @@ def _waveform_check(x: torch.Tensor):
 
 @torch.jit.script
 @dataclass
-class ContinuousParameter:
+class ContinuousCtrl:
   name: str
   min: float
   max: float
   default: float
 
+@torch.jit.script
+@dataclass
+class ChoiceCtrl:
+  name: str
+  choices: List[str]
+  default: str
+
+# define generic control type
+Ctrl = Union[ContinuousCtrl, ChoiceCtrl]
 
 @torch.jit.script
 @dataclass
@@ -29,12 +38,15 @@ class ModelCard:
   description: str
   tags: List[str]
 
-class TensorJuceModel(torch.jit.ScriptModule):
+
+class TensorJuceModel(nn.Module):
+  model_card: ModelCard
+  ctrls: Dict[str, Ctrl]
 
   def __init__(self, 
       model: nn.Module, 
       model_card: ModelCard, # essential metadata about the model
-      ctrls: List[Any], # parameter controls that the model takes (and are mapped to UI elements)
+      ctrls: Dict[str, Ctrl] # a dictionary of parameters that can be controlled by the user
     ):
     """ creates an Audacity model, wrapping a child model (that does the real work)"""
     super().__init__()
@@ -53,7 +65,7 @@ class TensorJuceModel(torch.jit.ScriptModule):
       attr_type = type(attr_val)
 
       if attr_key == 'ctrls':
-        attr_type = List[Any] # torchscript doesn't support inheritance!
+        attr_type = Dict[str, Ctrl] # torchscript doesn't support inheritance!
       elif attr_type == list:
         attr_type = get_list_type(attr_val)
       elif attr_type == dict:
@@ -65,7 +77,7 @@ class TensorJuceModel(torch.jit.ScriptModule):
 
 class WaveformToWaveformBase(TensorJuceModel):
 
-  def forward(self, x: torch.Tensor, params: Optional[torch.Tensor] = None) -> torch.Tensor:
+  def forward(self, x: torch.Tensor, params: Dict[str, torch.Tensor]) -> torch.Tensor:
     """ 
     Internal forward pass for a WaveformToWaveform model. 
 
@@ -78,7 +90,7 @@ class WaveformToWaveformBase(TensorJuceModel):
     
     return x
 
-  def do_forward_pass(self, x: torch.Tensor, params: Optional[torch.Tensor] = None) -> torch.Tensor:
+  def do_forward_pass(self, x: torch.Tensor, params: Dict[str, torch.Tensor]) -> torch.Tensor:
     """ 
     Perform a forward pass on a waveform-to-waveform model.
     
