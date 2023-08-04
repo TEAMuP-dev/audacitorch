@@ -2,22 +2,21 @@ import pytest
 import audacitorch
 
 
-@pytest.fixture
-def broken_metadata():
-    return {'no cool': 'information here'}
 
 @pytest.fixture
 def metadata():
     return {
-    'sample_rate': 48000, 
-    'domain_tags': ['music', 'speech', 'environmental'],
-    'short_description': 'Use me to boost volume by 3dB :).',
-    'long_description':  'This description can be a max of 280 characters aaaaaaaaaaaaaaaaaaaa.',
-    'tags': ['volume boost'],
-    'labels': ['boosted'],
-    'effect_type': 'waveform-to-waveform',
-    'multichannel': False,
-}
+        'name': 'Volume Booster',
+        'author': 'Hugo Flores Garcia',
+        'sample_rate': 48000, 
+        'domain_tags': ['music', 'speech', 'environmental'],
+        'description': 'Use me to boost volume by 3dB.',
+        'tags': ['volume boost'],
+        'labels': ['boosted'],
+        'effect_type': 'waveform-to-waveform',
+        'multichannel': False,
+    }
+
 
 @pytest.fixture
 def wav2wavmodel():
