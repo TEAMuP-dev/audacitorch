@@ -24,7 +24,7 @@ class MyVolumeModelWrapper(WaveformToWaveformBase):
 
         # we assume the user has modified the gain at this point
         output = self.model(
-            x, gain=torch.tensor(params['gain'])
+            x, gain=params['gain']
         )
 
         # do any postprocessing here!
@@ -32,7 +32,7 @@ class MyVolumeModelWrapper(WaveformToWaveformBase):
     
         return output
 
-# sample rate could be negative? 
+# sample rate could be negative
 model_card = ModelCard(
     name="MyVolumeModel",
     author="Me",
@@ -72,7 +72,6 @@ print(f"input audio: {audio}")
 
 # resample the audio to the model's sample rate
 audio = serialized_model.resample(audio, sample_rate_in)
-
 
 output = serialized_model(audio, {"gain": torch.tensor(3.0)})
 print(f"output audio: {output}")

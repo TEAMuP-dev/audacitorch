@@ -6,6 +6,10 @@ from dataclasses import dataclass
 
 from .utils import get_list_type, get_dict_types
 
+def print_params(params: Dict[str, torch.Tensor]):
+    for k, v in params.items():
+        print(f"{k}: {v}")
+
 def _waveform_check(x: torch.Tensor):
   assert x.ndim == 2, "input must have two dimensions (channels, samples)"
   assert x.shape[-1] > x.shape[0], f"The number of channels {x.shape[-2]} exceeds the number of samples {x.shape[-1]} in your INPUT waveform. \
@@ -84,9 +88,17 @@ class WaveformToWaveformBase(TensorJuceModel):
     All this does is wrap the do_forward_pass(x) function in assertions that check 
     that the correct input/output constraints are getting met. Nothing fancy. 
     """
+
+    print(f"model is {self.model}")
+    print(f"got input with shape {x.shape}")
+    print("parameters:")
+    print_params(params)
+
     _waveform_check(x)
     x = self.do_forward_pass(x, params)
     _waveform_check(x)
+
+    print(f"returning output with shape {x.shape}")
     
     return x
 
