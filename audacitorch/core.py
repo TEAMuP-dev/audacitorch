@@ -3,7 +3,7 @@ import torch
 from torch import nn
 from torchaudio.functional import resample
 from dataclasses import dataclass
-
+from enum import Enum
 from .utils import get_list_type, get_dict_types
 
 def print_params(params: Dict[str, torch.Tensor]):
@@ -15,23 +15,82 @@ def _waveform_check(x: torch.Tensor):
   assert x.shape[-1] > x.shape[0], f"The number of channels {x.shape[-2]} exceeds the number of samples {x.shape[-1]} in your INPUT waveform. \
                                       There might be something wrong with your model. "
 
+class ContinuousWidgetType(Enum):
+  SLIDER = 0
+  ROTARY = 1
+
+class BinaryWidgetType(Enum):
+  # LATCHING_BUTTON = 0
+  CHECKBOX = 1
+  # SWITCH = 2
+  # MOMENTARY_BUTTON = 1
+
+class OptionWidgetType(Enum):
+  DROPDOWN = 0
+  # RADIO_BUTTONS = 1
+
+class InputWidgetType(Enum):
+  TEXT_BOX = 0
+
+# @torch.jit.script and @dataclass don't work together
+# when we have custom types (e.g. enums) as fields.
 @torch.jit.script
-@dataclass
 class ContinuousCtrl:
-  name: str
-  min: float
-  max: float
-  default: float
+  def __init__(self, name: str, min: float, max: float, step: float,
+              default: float, widget: ContinuousWidgetType, 
+              ctrl_type: Optional[str] = None):
+    self.name = name
+    self.min = min
+    self.max = max
+    self.step = step
+    self.default = default
+    self.widget = widget
+    self.ctrl_type = ctrl_type
+# 
+@torch.jit.script
+class BinaryCtrl:
+  def __init__(self, name: str, default: bool, 
+               widget: BinaryWidgetType,
+               ctrl_type: Optional[str] = None):
+    self.name = name
+    self.default = default
+    self.widget = widget
+    self.ctrl_type = ctrl_type
+
 
 @torch.jit.script
-@dataclass
-class ChoiceCtrl:
-  name: str
-  choices: List[str]
-  default: str
+class OptionCtrl:
+  def __init__(self, name: str, options: List[str], default: str, 
+               widget: OptionWidgetType,
+               ctrl_type: Optional[str] = None):
+    self.name = name
+    self.options = options
+    self.default = default
+    self.widget = widget
+    self.ctrl_type = ctrl_type
+
+@torch.jit.script
+class TextInputCtrl:
+  def __init__(self, name: str, default: str, 
+               widget: InputWidgetType,
+               ctrl_type: Optional[str] = None):
+    self.name = name
+    self.default = default
+    self.widget = widget
+    self.ctrl_type = ctrl_type
+
+@torch.jit.script
+class FloatInputCtrl:
+  def __init__(self, name: str, default: float, 
+               widget: InputWidgetType,
+               ctrl_type: Optional[str] = None):
+    self.name = name
+    self.default = default
+    self.widget = widget
+    self.ctrl_type = ctrl_type
 
 # define generic control type
-Ctrl = Union[ContinuousCtrl, ChoiceCtrl]
+Ctrl = Union[ContinuousCtrl, BinaryCtrl, OptionCtrl, TextInputCtrl, FloatInputCtrl]
 
 @torch.jit.script
 @dataclass
@@ -70,6 +129,14 @@ class TensorJuceModel(nn.Module):
 
       if attr_key == 'ctrls':
         attr_type = Dict[str, Ctrl] # torchscript doesn't support inheritance!
+        # That's a hack to get the class name as a class attribute.
+        # In the c++ side, I could access only class attributes, and not the class name.
+        # self.__class__.__name__ isn't accessible during the __init__ of the class
+        # and other methods using metaclasses don't work with torch.jit.script
+
+        # iterate over all the dict elements of attr_val
+        for k, v in attr_val.items():
+          v.ctrl_type = v.__class__.__name__
       elif attr_type == list:
         attr_type = get_list_type(attr_val)
       elif attr_type == dict:

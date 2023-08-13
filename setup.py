@@ -11,9 +11,10 @@ setup(
     version='0.1.0',
     author='Hugo Flores Garcia',
     author_email='hf01049@georgiasouthern.edu',
-    url='https://github.com/hugofloresgarcia/audacitorch',
+    url='https://github.com/audacitorch/audacitorch',
     install_requires=[
-        'torch==1.9.0',
+        'torch==2.0.0',
+        'torchaudio==2.0.0'
     ],
     packages=['audacitorch'],
     package_data={'audacitorch': ['assets/*']},

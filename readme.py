@@ -10,7 +10,7 @@ class MyVolumeModel(nn.Module):
 
         return x
 
-from audacitorch import ModelCard, WaveformToWaveformBase, ContinuousCtrl
+from audacitorch import *
 
 class MyVolumeModelWrapper(WaveformToWaveformBase):
     
@@ -54,12 +54,41 @@ print(f"created model: {model}")
 
 ctrls = {
     "gain" : ContinuousCtrl(
-        name="gain",
+        name="gain", # display name
         default=1.0,
         min=0.0,
+        max=2.0, 
+        step=0.1,
+        widget=ContinuousWidgetType.SLIDER
+    ),
+    "eq" : ContinuousCtrl(
+        name="eq",
+        default=5.0,
+        min=0.0,
         max=10.0, 
+        step=1.0,
+        widget=ContinuousWidgetType.ROTARY
+    ),
+    "bypass" : BinaryCtrl(
+        name="bypass",
+        default=False,
+        widget=BinaryWidgetType.CHECKBOX
+    ),
+    "prompt" : TextInputCtrl(
+        name="prompt",
+        default="defaultPrompt",
+        widget=InputWidgetType.TEXT_BOX
+    ),
+    "device" : OptionCtrl(
+        name="device",
+        default="defaultDevice",
+        options=["defaultDevice", "otherDevice"],
+        widget=OptionWidgetType.DROPDOWN
     )
 }
+
+print(ctrls["gain"].ctrl_type)
+breakpoint()
 
 # wrap the model in the TensorJuceModel wrapper, which will handle all the metadata and jit.scripting
 serialized_model = torch.jit.script(MyVolumeModelWrapper(model, model_card, ctrls))
@@ -89,3 +118,4 @@ print(f"ctrls: {loaded_model.ctrls}")
 breakpoint()
 loaded_output = loaded_model(audio, {"gain": torch.tensor(3.0)})
 assert torch.allclose(output, loaded_output)
+
